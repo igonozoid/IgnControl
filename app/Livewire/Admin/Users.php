@@ -36,6 +36,13 @@ class Users extends Component
     public ?int $editingUserId = null;
     public array $levels = [];
 
+    // Edição de dados do usuário (nome/e-mail/senha)
+    public ?int $editingDetailsUserId = null;
+    public string $editName = '';
+    public string $editEmail = '';
+    public string $editPassword = '';
+    public string $editPassword_confirmation = '';
+
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('admin', 'full'), 403);
@@ -124,6 +131,46 @@ class Users extends Component
     {
         $this->editingUserId = null;
         $this->levels = [];
+    }
+
+    public function editDetails(int $userId): void
+    {
+        abort_unless(Auth::user()->hasModuleAccess('admin', 'full'), 403);
+
+        $user = User::query()->findOrFail($userId);
+
+        $this->editingDetailsUserId = $user->id;
+        $this->editName = $user->name;
+        $this->editEmail = $user->email;
+        $this->editPassword = '';
+        $this->editPassword_confirmation = '';
+    }
+
+    public function saveDetails(): void
+    {
+        abort_unless(Auth::user()->hasModuleAccess('admin', 'full'), 403);
+
+        $data = $this->validate([
+            'editName' => ['required', 'string', 'max:255'],
+            'editEmail' => ['required', 'email', 'unique:users,email,'.$this->editingDetailsUserId],
+            // Senha é opcional aqui: só troca se o admin preencher algo.
+            'editPassword' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::query()->findOrFail($this->editingDetailsUserId);
+
+        $user->update([
+            'name' => $data['editName'],
+            'email' => $data['editEmail'],
+            ...(! empty($data['editPassword']) ? ['password' => Hash::make($data['editPassword'])] : []),
+        ]);
+
+        $this->cancelEditingDetails();
+    }
+
+    public function cancelEditingDetails(): void
+    {
+        $this->reset(['editingDetailsUserId', 'editName', 'editEmail', 'editPassword', 'editPassword_confirmation']);
     }
 
     public function removeUser(int $userId): void

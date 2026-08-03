@@ -46,6 +46,41 @@
         </form>
     </x-slide-over>
 
+    <x-slide-over show="editingDetailsUserId" close="cancelEditingDetails" title="Editar usuário">
+        <form wire:submit="saveDetails" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Nome</label>
+                <input type="text" wire:model="editName" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('editName') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">E-mail</label>
+                <input type="email" wire:model="editEmail" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('editEmail') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Nova senha (opcional)</label>
+                <input type="password" wire:model="editPassword" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('editPassword') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                <p class="text-gray-500 dark:text-neutral-400 mt-1">Deixe em branco pra manter a senha atual.</p>
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Confirmar nova senha</label>
+                <input type="password" wire:model="editPassword_confirmation" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700">
+                    <x-icon name="check" />
+                    Salvar
+                </button>
+                <button type="button" wire:click="cancelEditingDetails" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200 rounded-md font-medium hover:bg-gray-200 dark:hover:bg-neutral-600">
+                    <x-icon name="x-mark" />
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </x-slide-over>
+
     <x-slide-over show="editingUserId" close="cancelEditingPermissions" title="Permissões — {{ $users->firstWhere('id', $editingUserId)?->name }}">
         <form wire:submit="savePermissions" class="space-y-3 text-xs">
             <div class="grid grid-cols-2 gap-3">
@@ -104,6 +139,7 @@
                             </div>
                         </td>
                         <td class="px-4 py-2 text-right text-xs whitespace-nowrap space-x-2">
+                            <button wire:click="editDetails({{ $user->id }})" title="Editar usuário" class="inline-flex text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-100"><x-icon name="pencil" /></button>
                             <button wire:click="editPermissions({{ $user->id }})" title="Editar permissões" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="shield" /></button>
                             @if ($user->id !== auth()->id())
                                 <button wire:click="removeUser({{ $user->id }})" wire:confirm="Remover este usuário da empresa?" title="Remover" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>

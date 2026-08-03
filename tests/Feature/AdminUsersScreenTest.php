@@ -114,6 +114,61 @@ class AdminUsersScreenTest extends TestCase
         Livewire::test(AdminUsers::class)->call('removeUser', $admin->id)->assertStatus(422);
     }
 
+    public function test_admin_can_edit_a_users_name_and_email(): void
+    {
+        $company = Company::factory()->create();
+        $admin = $this->adminUser($company);
+        $member = User::factory()->create(['current_company_id' => $company->id, 'name' => 'Nome Antigo', 'email' => 'antigo@example.com']);
+        $company->users()->attach($member->id, ['role' => 'member']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)
+            ->call('editDetails', $member->id)
+            ->set('editName', 'Nome Novo')
+            ->set('editEmail', 'novo@example.com')
+            ->call('saveDetails');
+
+        $member->refresh();
+        $this->assertSame('Nome Novo', $member->name);
+        $this->assertSame('novo@example.com', $member->email);
+    }
+
+    public function test_admin_can_reset_a_users_password(): void
+    {
+        $company = Company::factory()->create();
+        $admin = $this->adminUser($company);
+        $member = User::factory()->create(['current_company_id' => $company->id]);
+        $company->users()->attach($member->id, ['role' => 'member']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)
+            ->call('editDetails', $member->id)
+            ->set('editPassword', 'novaSenha123')
+            ->set('editPassword_confirmation', 'novaSenha123')
+            ->call('saveDetails');
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('novaSenha123', $member->refresh()->password));
+    }
+
+    public function test_leaving_the_password_blank_keeps_the_old_one(): void
+    {
+        $company = Company::factory()->create();
+        $admin = $this->adminUser($company);
+        $member = User::factory()->create(['current_company_id' => $company->id, 'password' => bcrypt('senhaOriginal')]);
+        $company->users()->attach($member->id, ['role' => 'member']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)
+            ->call('editDetails', $member->id)
+            ->set('editEmail', $member->email)
+            ->call('saveDetails');
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('senhaOriginal', $member->refresh()->password));
+    }
+
     public function test_users_list_is_scoped_to_the_active_company(): void
     {
         $companyA = Company::factory()->create();
