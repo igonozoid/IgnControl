@@ -14,6 +14,7 @@ use App\Livewire\Reports\Dre as ReportsDre;
 use App\Livewire\Reports\Index as ReportsIndex;
 use App\Livewire\Reports\Payables as ReportsPayables;
 use App\Livewire\Reports\Receivables as ReportsReceivables;
+use App\Livewire\Tasks\Index as TasksIndex;
 use Illuminate\Support\Facades\Route;
 
 // Rotas das telas de negócio (fora do que o Breeze gera). Este arquivo é
@@ -26,6 +27,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/financeiro/lancamentos', FinancialEntriesIndex::class)->name('financial-entries.index');
     Route::get('/financeiro/lancamentos/{financialEntry}/recibo', [FinancialEntryReceiptController::class, 'show'])->name('financial-entries.receipt');
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
+    Route::get('/agenda', TasksIndex::class)->name('tasks.index');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
 
