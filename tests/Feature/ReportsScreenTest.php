@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Reports\AccountStatement;
+use App\Livewire\Reports\Analytical;
 use App\Livewire\Reports\CashFlow;
+use App\Livewire\Reports\CashForecast;
 use App\Livewire\Reports\Dre;
 use App\Livewire\Reports\CostCenters;
 use App\Livewire\Reports\Payables;
 use App\Livewire\Reports\Receivables;
+use App\Livewire\Reports\Registrations;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Contact;
@@ -288,5 +292,129 @@ class ReportsScreenTest extends TestCase
             ->assertSee('800,00')
             ->assertSee('250,00')
             ->assertDontSee('999,00');
+    }
+
+    public function test_analytical_lists_entries_in_period_with_totals(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'income',
+            'amount' => '500.00',
+            'description' => 'Venda avulsa',
+            'due_date' => '2026-03-10',
+        ]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => '120.00',
+            'description' => 'Compra de material',
+            'due_date' => '2026-03-12',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Analytical::class)
+            ->set('from', '2026-03-01')
+            ->set('to', '2026-03-31')
+            ->assertSee('Venda avulsa')
+            ->assertSee('Compra de material')
+            ->assertSee('500,00')
+            ->assertSee('120,00');
+    }
+
+    public function test_cash_forecast_projects_balance_from_pending_entries(): void
+    {
+        $this->travelTo('2026-03-01');
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+
+        // Já realizado - compõe o saldo atual.
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'income',
+            'amount' => '1000.00',
+            'status' => 'paid',
+            'due_date' => '2026-02-01',
+            'paid_date' => '2026-02-01',
+        ]);
+
+        // Pendente dentro do horizonte de projeção.
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => '300.00',
+            'status' => 'pending',
+            'due_date' => '2026-03-10',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(CashForecast::class)
+            ->set('to', '2026-03-31')
+            ->assertSee('1.000,00') // saldo atual realizado
+            ->assertSee('700,00');  // saldo projetado final (1000 - 300)
+
+        $this->travelBack();
+    }
+
+    public function test_account_statement_shows_running_balance_for_the_selected_account(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id, 'name' => 'Conta Principal']);
+
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'income',
+            'amount' => '600.00',
+            'status' => 'paid',
+            'description' => 'Recebimento',
+            'due_date' => '2026-04-05',
+            'paid_date' => '2026-04-05',
+        ]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'amount' => '150.00',
+            'status' => 'paid',
+            'description' => 'Pagamento',
+            'due_date' => '2026-04-06',
+            'paid_date' => '2026-04-06',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(AccountStatement::class)
+            ->set('accountId', $account->id)
+            ->set('from', '2026-04-01')
+            ->set('to', '2026-04-30')
+            ->assertSee('Recebimento')
+            ->assertSee('Pagamento')
+            ->assertSee('450,00'); // saldo final (600 - 150)
+    }
+
+    public function test_registrations_report_lists_the_selected_registry(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        CostCenter::factory()->create(['company_id' => $company->id, 'name' => 'Centro Alpha']);
+
+        $this->actingAs($user);
+
+        Livewire::test(Registrations::class)
+            ->set('type', 'cost-centers')
+            ->assertSee('Centro Alpha');
     }
 }

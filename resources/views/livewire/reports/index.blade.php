@@ -27,9 +27,33 @@
         </a>
 
         <a href="{{ route('reports.cost-centers') }}" wire:navigate
-            class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500 sm:col-span-2">
+            class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500">
             <p class="font-medium text-gray-900 dark:text-neutral-100">Despesas/Receitas por Centro de Custo</p>
             <p class="text-xs text-gray-500 dark:text-neutral-400">Totais por centro de custo, num período.</p>
+        </a>
+
+        <a href="{{ route('reports.analytical') }}" wire:navigate
+            class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500">
+            <p class="font-medium text-gray-900 dark:text-neutral-100">Relatório Analítico</p>
+            <p class="text-xs text-gray-500 dark:text-neutral-400">Lista detalhada de todo lançamento num período.</p>
+        </a>
+
+        <a href="{{ route('reports.cash-forecast') }}" wire:navigate
+            class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500">
+            <p class="font-medium text-gray-900 dark:text-neutral-100">Previsão de Caixa</p>
+            <p class="text-xs text-gray-500 dark:text-neutral-400">Projeção do saldo com base no que ainda está em aberto.</p>
+        </a>
+
+        <a href="{{ route('reports.account-statement') }}" wire:navigate
+            class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500">
+            <p class="font-medium text-gray-900 dark:text-neutral-100">Extrato por Conta Financeira</p>
+            <p class="text-xs text-gray-500 dark:text-neutral-400">Movimentos pagos de uma conta, com saldo corrente.</p>
+        </a>
+
+        <a href="{{ route('reports.registrations') }}" wire:navigate
+            class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500">
+            <p class="font-medium text-gray-900 dark:text-neutral-100">Relatórios Cadastrais</p>
+            <p class="text-xs text-gray-500 dark:text-neutral-400">Listagem imprimível de contas, categorias, centros de custo e contatos.</p>
         </a>
     </div>
 </div>

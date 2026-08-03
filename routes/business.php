@@ -8,12 +8,16 @@ use App\Livewire\CostCenters\Index as CostCentersIndex;
 use App\Livewire\FinancialAccounts\Index as FinancialAccountsIndex;
 use App\Http\Controllers\FinancialEntryReceiptController;
 use App\Livewire\FinancialEntries\Index as FinancialEntriesIndex;
+use App\Livewire\Reports\AccountStatement as ReportsAccountStatement;
+use App\Livewire\Reports\Analytical as ReportsAnalytical;
 use App\Livewire\Reports\CashFlow as ReportsCashFlow;
+use App\Livewire\Reports\CashForecast as ReportsCashForecast;
 use App\Livewire\Reports\CostCenters as ReportsCostCenters;
 use App\Livewire\Reports\Dre as ReportsDre;
 use App\Livewire\Reports\Index as ReportsIndex;
 use App\Livewire\Reports\Payables as ReportsPayables;
 use App\Livewire\Reports\Receivables as ReportsReceivables;
+use App\Livewire\Reports\Registrations as ReportsRegistrations;
 use App\Livewire\Tasks\Index as TasksIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -37,4 +41,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/relatorios/contas-a-pagar', ReportsPayables::class)->name('reports.payables');
     Route::get('/relatorios/contas-a-receber', ReportsReceivables::class)->name('reports.receivables');
     Route::get('/relatorios/centros-de-custo', ReportsCostCenters::class)->name('reports.cost-centers');
+    Route::get('/relatorios/analitico', ReportsAnalytical::class)->name('reports.analytical');
+    Route::get('/relatorios/previsao-de-caixa', ReportsCashForecast::class)->name('reports.cash-forecast');
+    Route::get('/relatorios/extrato-de-conta', ReportsAccountStatement::class)->name('reports.account-statement');
+    Route::get('/relatorios/cadastrais', ReportsRegistrations::class)->name('reports.registrations');
 });
