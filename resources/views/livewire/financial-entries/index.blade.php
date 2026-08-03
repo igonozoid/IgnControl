@@ -139,36 +139,78 @@
                 </div>
             @else
                 <div>
-                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Contato</label>
-                    <select wire:model="contact_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
-                        <option value="">— nenhum —</option>
-                        @foreach ($contacts as $contact)
-                            <option value="{{ $contact->id }}">{{ $contact->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('contact_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    <div class="flex items-center justify-between">
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Contato</label>
+                        @if (! $showQuickContact)
+                            <button type="button" wire:click="$set('showQuickContact', true)" title="Cadastrar contato novo" class="text-green-600 dark:text-green-400 hover:text-green-800"><x-icon name="plus" class="w-3.5 h-3.5" /></button>
+                        @endif
+                    </div>
+                    @if ($showQuickContact)
+                        <div class="mt-1 flex gap-1.5">
+                            <input type="text" wire:model="quickContactName" placeholder="Nome do contato" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                            <button type="button" wire:click="quickCreateContact" class="px-2 rounded-md bg-green-600 text-white text-xs hover:bg-green-700"><x-icon name="check" class="w-3.5 h-3.5" /></button>
+                            <button type="button" wire:click="$set('showQuickContact', false)" class="px-2 rounded-md bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 text-xs"><x-icon name="x-mark" class="w-3.5 h-3.5" /></button>
+                        </div>
+                        @error('quickContactName') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    @else
+                        <select wire:model="contact_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                            <option value="">— nenhum —</option>
+                            @foreach ($contacts as $contact)
+                                <option value="{{ $contact->id }}">{{ $contact->name }}{{ $contact->needs_review ? ' (revisar cadastro)' : '' }}</option>
+                            @endforeach
+                        </select>
+                        @error('contact_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    @endif
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Categoria</label>
-                        <select wire:model="category_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
-                            <option value="">— nenhuma —</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('category_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        <div class="flex items-center justify-between">
+                            <label class="block font-medium text-gray-700 dark:text-neutral-300">Categoria</label>
+                            @if (! $showQuickCategory)
+                                <button type="button" wire:click="$set('showQuickCategory', true)" title="Cadastrar categoria nova" class="text-green-600 dark:text-green-400 hover:text-green-800"><x-icon name="plus" class="w-3.5 h-3.5" /></button>
+                            @endif
+                        </div>
+                        @if ($showQuickCategory)
+                            <div class="mt-1 flex gap-1.5">
+                                <input type="text" wire:model="quickCategoryName" placeholder="Nome" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                                <button type="button" wire:click="quickCreateCategory" class="px-2 rounded-md bg-green-600 text-white text-xs hover:bg-green-700"><x-icon name="check" class="w-3.5 h-3.5" /></button>
+                                <button type="button" wire:click="$set('showQuickCategory', false)" class="px-2 rounded-md bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 text-xs"><x-icon name="x-mark" class="w-3.5 h-3.5" /></button>
+                            </div>
+                            @error('quickCategoryName') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        @else
+                            <select wire:model="category_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                                <option value="">— nenhuma —</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}{{ $category->needs_review ? ' (revisar)' : '' }}</option>
+                                @endforeach
+                            </select>
+                            @error('category_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        @endif
                     </div>
                     <div>
-                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Centro de custo</label>
-                        <select wire:model="cost_center_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
-                            <option value="">— nenhum —</option>
-                            @foreach ($costCenters as $costCenter)
-                                <option value="{{ $costCenter->id }}">{{ $costCenter->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('cost_center_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        <div class="flex items-center justify-between">
+                            <label class="block font-medium text-gray-700 dark:text-neutral-300">Centro de custo</label>
+                            @if (! $showQuickCostCenter)
+                                <button type="button" wire:click="$set('showQuickCostCenter', true)" title="Cadastrar centro de custo novo" class="text-green-600 dark:text-green-400 hover:text-green-800"><x-icon name="plus" class="w-3.5 h-3.5" /></button>
+                            @endif
+                        </div>
+                        @if ($showQuickCostCenter)
+                            <div class="mt-1 flex gap-1.5">
+                                <input type="text" wire:model="quickCostCenterName" placeholder="Nome" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                                <button type="button" wire:click="quickCreateCostCenter" class="px-2 rounded-md bg-green-600 text-white text-xs hover:bg-green-700"><x-icon name="check" class="w-3.5 h-3.5" /></button>
+                                <button type="button" wire:click="$set('showQuickCostCenter', false)" class="px-2 rounded-md bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 text-xs"><x-icon name="x-mark" class="w-3.5 h-3.5" /></button>
+                            </div>
+                            @error('quickCostCenterName') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        @else
+                            <select wire:model="cost_center_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                                <option value="">— nenhum —</option>
+                                @foreach ($costCenters as $costCenter)
+                                    <option value="{{ $costCenter->id }}">{{ $costCenter->name }}{{ $costCenter->needs_review ? ' (revisar)' : '' }}</option>
+                                @endforeach
+                            </select>
+                            @error('cost_center_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                        @endif
                     </div>
                 </div>
             @endif

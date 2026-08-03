@@ -26,6 +26,10 @@
                 </select>
             </div>
         </div>
+        <label class="mt-3 flex items-center gap-1.5 text-xs text-gray-600 dark:text-neutral-300">
+            <input type="checkbox" wire:model.live="onlyNeedsReview" class="rounded dark:bg-neutral-700 dark:border-neutral-600">
+            Só pendentes de revisão (cadastrados rápido, direto do lançamento)
+        </label>
     </div>
 
     <x-slide-over show="showForm" close="cancel" title="{{ $editingId ? 'Editar contato' : 'Novo contato' }}">
@@ -96,7 +100,12 @@
             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                 @forelse ($contacts as $contact)
                     <tr wire:key="contact-{{ $contact->id }}">
-                        <td class="px-4 py-2 text-xs text-gray-900 dark:text-neutral-100">{{ $contact->name }}</td>
+                        <td class="px-4 py-2 text-xs text-gray-900 dark:text-neutral-100">
+                            {{ $contact->name }}
+                            @if ($contact->needs_review)
+                                <span title="Cadastrado rápido, direto do lançamento — falta completar/revisar" class="ml-1 inline-flex px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">revisar</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">
                             {{ collect([
                                 $contact->is_supplier ? 'Fornecedor' : null,
@@ -108,6 +117,9 @@
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $contact->email ?: $contact->phone ?: '—' }}</td>
                         @if ($this->canWrite)
                             <td class="px-4 py-2 text-right text-xs space-x-2 whitespace-nowrap">
+                                @if ($contact->needs_review)
+                                    <button wire:click="markReviewed({{ $contact->id }})" title="Marcar como revisado" class="inline-flex text-amber-600 dark:text-amber-400 hover:text-amber-800"><x-icon name="check-circle" /></button>
+                                @endif
                                 <button wire:click="edit({{ $contact->id }})" title="Editar" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="pencil" /></button>
                                 <button wire:click="delete({{ $contact->id }})" wire:confirm="Tem certeza que quer excluir este contato?" title="Excluir" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>
                             </td>

@@ -20,6 +20,8 @@ class Index extends Component
     public string $search = '';
     #[Url]
     public string $filterRole = ''; // '' | supplier | customer | employee | other
+    #[Url]
+    public bool $onlyNeedsReview = false;
 
     public bool $showForm = false;
     public ?int $editingId = null;
@@ -103,6 +105,9 @@ class Index extends Component
         $data = $this->validate();
 
         if ($this->editingId) {
+            // Editar e salvar já conta como "revisado" — não precisa de
+            // um passo separado só pra tirar o selo de pendente.
+            $data['needs_review'] = false;
             Contact::query()->findOrFail($this->editingId)->update($data);
         } else {
             Contact::query()->create($data);
@@ -116,6 +121,12 @@ class Index extends Component
     {
         abort_unless($this->canWrite, 403);
         Contact::query()->findOrFail($id)->delete();
+    }
+
+    public function markReviewed(int $id): void
+    {
+        abort_unless($this->canWrite, 403);
+        Contact::query()->findOrFail($id)->update(['needs_review' => false]);
     }
 
     public function cancel(): void
@@ -142,6 +153,7 @@ class Index extends Component
                 });
             })
             ->when($this->filterRole !== '' && isset($roleColumns[$this->filterRole]), fn ($q) => $q->where($roleColumns[$this->filterRole], true))
+            ->when($this->onlyNeedsReview, fn ($q) => $q->where('needs_review', true))
             ->orderBy('name')
             ->paginate(15);
 

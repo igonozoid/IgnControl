@@ -20,6 +20,8 @@ class Index extends Component
     public string $search = '';
     #[Url]
     public string $filterType = '';
+    #[Url]
+    public bool $onlyNeedsReview = false;
 
     public bool $showForm = false;
     public ?int $editingId = null;
@@ -71,6 +73,7 @@ class Index extends Component
         $data = $this->validate();
 
         if ($this->editingId) {
+            $data['needs_review'] = false;
             Category::query()->findOrFail($this->editingId)->update($data);
         } else {
             Category::query()->create($data);
@@ -86,6 +89,12 @@ class Index extends Component
         Category::query()->findOrFail($id)->delete();
     }
 
+    public function markReviewed(int $id): void
+    {
+        abort_unless($this->canWrite, 403);
+        Category::query()->findOrFail($id)->update(['needs_review' => false]);
+    }
+
     public function cancel(): void
     {
         $this->showForm = false;
@@ -97,6 +106,7 @@ class Index extends Component
         $categories = Category::query()
             ->when($this->search !== '', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
             ->when($this->filterType !== '', fn ($q) => $q->where('type', $this->filterType))
+            ->when($this->onlyNeedsReview, fn ($q) => $q->where('needs_review', true))
             ->orderBy('type')
             ->orderBy('name')
             ->paginate(15);

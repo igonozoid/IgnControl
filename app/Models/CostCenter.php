@@ -17,10 +17,12 @@ class CostCenter extends Model
         'name',
         'code',
         'is_active',
+        'needs_review',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'needs_review' => 'boolean',
     ];
 
     public function financialEntries(): HasMany

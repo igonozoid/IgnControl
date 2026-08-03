@@ -33,6 +33,7 @@ class Contact extends Model
         'is_other',
         'other_role_label',
         'is_active',
+        'needs_review',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Contact extends Model
         'is_employee' => 'boolean',
         'is_other' => 'boolean',
         'is_active' => 'boolean',
+        'needs_review' => 'boolean',
     ];
 
     public function financialEntries(): HasMany

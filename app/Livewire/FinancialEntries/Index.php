@@ -58,6 +58,18 @@ class Index extends Component
     // Mensagem exibida quando uma ação esbarra no fechamento de período.
     public ?string $lockError = null;
 
+    // Cadastro rápido: cada um desses controla um mini-formulário (só
+    // nome) que aparece ao lado do respectivo campo, pra não precisar
+    // sair do lançamento pra cadastrar um contato/categoria/centro de
+    // custo novo. O registro nasce com needs_review=true, como um lembrete
+    // de completar o cadastro depois com calma.
+    public bool $showQuickContact = false;
+    public string $quickContactName = '';
+    public bool $showQuickCategory = false;
+    public string $quickCategoryName = '';
+    public bool $showQuickCostCenter = false;
+    public string $quickCostCenterName = '';
+
     #[Validate('required|exists:financial_accounts,id')]
     public ?int $financial_account_id = null;
 
@@ -122,12 +134,66 @@ class Index extends Component
         return $entry->due_date->isPast() ? 'overdue' : 'pending';
     }
 
+    public function quickCreateContact(): void
+    {
+        abort_unless($this->canWrite, 403);
+
+        $data = $this->validate(['quickContactName' => ['required', 'string', 'max:255']], [], ['quickContactName' => 'nome']);
+
+        $contact = Contact::query()->create([
+            'name' => $data['quickContactName'],
+            'is_customer' => $this->tab === 'income',
+            'is_supplier' => $this->tab === 'expense',
+            'needs_review' => true,
+        ]);
+
+        $this->contact_id = $contact->id;
+        $this->quickContactName = '';
+        $this->showQuickContact = false;
+    }
+
+    public function quickCreateCategory(): void
+    {
+        abort_unless($this->canWrite, 403);
+
+        $data = $this->validate(['quickCategoryName' => ['required', 'string', 'max:255']], [], ['quickCategoryName' => 'nome']);
+
+        $category = Category::query()->create([
+            'name' => $data['quickCategoryName'],
+            'type' => $this->tab === 'income' ? 'income' : 'expense',
+            'needs_review' => true,
+        ]);
+
+        $this->category_id = $category->id;
+        $this->quickCategoryName = '';
+        $this->showQuickCategory = false;
+    }
+
+    public function quickCreateCostCenter(): void
+    {
+        abort_unless($this->canWrite, 403);
+
+        $data = $this->validate(['quickCostCenterName' => ['required', 'string', 'max:255']], [], ['quickCostCenterName' => 'nome']);
+
+        $costCenter = CostCenter::query()->create([
+            'name' => $data['quickCostCenterName'],
+            'needs_review' => true,
+        ]);
+
+        $this->cost_center_id = $costCenter->id;
+        $this->quickCostCenterName = '';
+        $this->showQuickCostCenter = false;
+    }
+
     private function resetForm(): void
     {
         $this->reset([
             'financial_account_id', 'destination_account_id', 'contact_id',
             'category_id', 'cost_center_id', 'amount', 'description',
             'paid_date', 'editingId',
+            'showQuickContact', 'quickContactName',
+            'showQuickCategory', 'quickCategoryName',
+            'showQuickCostCenter', 'quickCostCenterName',
         ]);
         $this->currency_code = 'BRL';
         $this->due_date = now()->toDateString();

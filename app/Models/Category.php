@@ -19,10 +19,12 @@ class Category extends Model
         'name',
         'type',
         'is_active',
+        'needs_review',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'needs_review' => 'boolean',
     ];
 
     public function parent(): BelongsTo

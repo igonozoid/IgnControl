@@ -24,6 +24,10 @@
                 </select>
             </div>
         </div>
+        <label class="mt-3 flex items-center gap-1.5 text-xs text-gray-600 dark:text-neutral-300">
+            <input type="checkbox" wire:model.live="onlyNeedsReview" class="rounded dark:bg-neutral-700 dark:border-neutral-600">
+            Só pendentes de revisão (cadastrados rápido, direto do lançamento)
+        </label>
     </div>
 
     <x-slide-over show="showForm" close="cancel" title="{{ $editingId ? 'Editar centro de custo' : 'Novo centro de custo' }}">
@@ -75,7 +79,12 @@
             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                 @forelse ($costCenters as $costCenter)
                     <tr wire:key="cost-center-{{ $costCenter->id }}">
-                        <td class="px-4 py-2 text-xs text-gray-900 dark:text-neutral-100">{{ $costCenter->name }}</td>
+                        <td class="px-4 py-2 text-xs text-gray-900 dark:text-neutral-100">
+                            {{ $costCenter->name }}
+                            @if ($costCenter->needs_review)
+                                <span title="Cadastrado rápido, direto do lançamento — falta revisar" class="ml-1 inline-flex px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">revisar</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $costCenter->code ?? '—' }}</td>
                         <td class="px-4 py-2 text-xs">
                             @if ($costCenter->is_active)
@@ -86,6 +95,9 @@
                         </td>
                         @if ($this->canWrite)
                             <td class="px-4 py-2 text-right text-xs space-x-2 whitespace-nowrap">
+                                @if ($costCenter->needs_review)
+                                    <button wire:click="markReviewed({{ $costCenter->id }})" title="Marcar como revisado" class="inline-flex text-amber-600 dark:text-amber-400 hover:text-amber-800"><x-icon name="check-circle" /></button>
+                                @endif
                                 <button wire:click="edit({{ $costCenter->id }})" title="Editar" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="pencil" /></button>
                                 <button wire:click="delete({{ $costCenter->id }})" wire:confirm="Tem certeza que quer excluir este centro de custo?" title="Excluir" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>
                             </td>
