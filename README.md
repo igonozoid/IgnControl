@@ -1,59 +1,62 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/ignf-logo-light.png" width="320" alt="IgnControl">
 </p>
 
-## About Laravel
+# IgnControl
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Sistema de gestão financeira multiempresa e multimoeda, para uso interno em
+rede local (LAN), com uma segunda fase prevista de acesso externo limitado
+(PWA). Reescrita em Laravel do sistema legado (desktop, Python/PySide6) do
+mesmo nome.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Laravel 12** + **Livewire 3** (com Volt) para as telas — renderização no
+  servidor, sem precisar de um front-end JavaScript separado.
+- **Tailwind CSS** + **Alpine.js** para estilo e interações do lado do
+  cliente (slide-overs, tema claro/escuro).
+- **MySQL** em desenvolvimento/produção; a suíte de testes roda em SQLite em
+  memória.
 
-## Learning Laravel
+## Principais módulos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **Financeiro**: contas financeiras, categorias, centros de custo,
+  lançamentos (receitas/despesas/transferências), com recibo imprimível.
+- **Contatos**: clientes e fornecedores.
+- **Relatórios**: DRE, fluxo de caixa, contas a pagar/receber por contato,
+  despesas/receitas por centro de custo.
+- **Administração**: usuários e permissões por módulo (Financeiro,
+  Contatos, Relatórios, Auditoria, Administração), em três níveis
+  (nenhum/leitura/total), por empresa.
+- **Auditoria**: log automático de criação/edição/exclusão nos principais
+  modelos do sistema.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Decisões de arquitetura
 
-## Laravel Sponsors
+Ver [`ARQUITETURA.md`](ARQUITETURA.md) — explica em português simples como
+funciona o multiempresa (global scope por `company_id`), o sistema de
+permissões, e a trilha de auditoria.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Rodando o projeto localmente
 
-### Premium Partners
+Ver [`SETUP.md`](SETUP.md) para o passo a passo completo (Composer, npm,
+banco de dados, `.env`).
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Resumo:
 
-## Contributing
+```bash
+composer install
+npm install && npm run build
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Testes
 
-## Code of Conduct
+```bash
+php artisan test
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+A suíte cobre autenticação, isolamento entre empresas, permissões,
+auditoria, e todas as telas de Financeiro/Contatos/Relatórios.
