@@ -1,0 +1,80 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Livewire\Categories\Index;
+use App\Models\Category;
+use App\Models\Company;
+use App\Models\Permission;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class CategoriesScreenTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function userWithLevel(Company $company, string $level): User
+    {
+        $user = User::factory()->create(['current_company_id' => $company->id]);
+
+        Permission::query()->create([
+            'company_id' => $company->id,
+            'user_id' => $user->id,
+            'module' => 'financial',
+            'level' => $level,
+        ]);
+
+        return $user;
+    }
+
+    public function test_list_only_shows_categories_from_the_active_company(): void
+    {
+        $companyA = Company::factory()->create();
+        $companyB = Company::factory()->create();
+        $user = $this->userWithLevel($companyA, 'read');
+
+        Category::factory()->create(['company_id' => $companyA->id, 'name' => 'Vendas']);
+        Category::factory()->create(['company_id' => $companyB->id, 'name' => 'Outra Empresa']);
+
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->assertSee('Vendas')
+            ->assertDontSee('Outra Empresa');
+    }
+
+    public function test_read_only_user_cannot_create(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->call('create')->assertForbidden();
+    }
+
+    public function test_full_access_user_can_create_and_delete(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Despesas com marketing')
+            ->set('type', 'expense')
+            ->call('save');
+
+        $this->assertDatabaseHas('categories', [
+            'company_id' => $company->id,
+            'name' => 'Despesas com marketing',
+        ]);
+
+        $category = Category::query()->where('name', 'Despesas com marketing')->firstOrFail();
+
+        Livewire::test(Index::class)->call('delete', $category->id);
+
+        $this->assertDatabaseMissing('categories', ['id' => $category->id]);
+    }
+}

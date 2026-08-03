@@ -1,0 +1,128 @@
+<div class="max-w-5xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100"><x-icon name="users" class="w-4 h-4" />Contatos</h1>
+        @if ($this->canWrite)
+            <button wire:click="create" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-medium hover:bg-indigo-700">
+                <x-icon name="plus" />
+                Novo contato
+            </button>
+        @endif
+    </div>
+
+    <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Buscar (nome/documento/e-mail)</label>
+                <input type="text" wire:model.live.debounce.400ms="search" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100" placeholder="Digite pra buscar...">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Papel</label>
+                <select wire:model.live="filterRole" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
+                    <option value="">Todos</option>
+                    <option value="supplier">Fornecedor</option>
+                    <option value="customer">Cliente</option>
+                    <option value="employee">Funcionário</option>
+                    <option value="other">Outro</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <x-slide-over show="showForm" close="cancel" title="{{ $editingId ? 'Editar contato' : 'Novo contato' }}">
+        <form wire:submit="save" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Nome</label>
+                <input type="text" wire:model="name" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('name') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Documento (CPF/CNPJ)</label>
+                <input type="text" wire:model="document" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('document') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">E-mail</label>
+                <input type="email" wire:model="email" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('email') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Telefone</label>
+                <input type="text" wire:model="phone" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('phone') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300 mb-1">Papéis</label>
+                <div class="flex flex-wrap gap-3 text-gray-700 dark:text-neutral-300">
+                    <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_supplier" class="dark:bg-neutral-700 dark:border-neutral-600"> Fornecedor</label>
+                    <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_customer" class="dark:bg-neutral-700 dark:border-neutral-600"> Cliente</label>
+                    <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_employee" class="dark:bg-neutral-700 dark:border-neutral-600"> Funcionário</label>
+                    <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_other" class="dark:bg-neutral-700 dark:border-neutral-600"> Outro</label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Observações</label>
+                <textarea wire:model="notes" rows="2" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm"></textarea>
+                @error('notes') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700">
+                    <x-icon name="check" />
+                    Salvar
+                </button>
+                <button type="button" wire:click="cancel" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200 rounded-md font-medium hover:bg-gray-200 dark:hover:bg-neutral-600">
+                    <x-icon name="x-mark" />
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </x-slide-over>
+
+    <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+            <thead class="bg-gray-50 dark:bg-neutral-700/50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Nome</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Papéis</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Contato</th>
+                    @if ($this->canWrite)
+                        <th class="px-4 py-2"></th>
+                    @endif
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                @forelse ($contacts as $contact)
+                    <tr wire:key="contact-{{ $contact->id }}">
+                        <td class="px-4 py-2 text-xs text-gray-900 dark:text-neutral-100">{{ $contact->name }}</td>
+                        <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">
+                            {{ collect([
+                                $contact->is_supplier ? 'Fornecedor' : null,
+                                $contact->is_customer ? 'Cliente' : null,
+                                $contact->is_employee ? 'Funcionário' : null,
+                                $contact->is_other ? 'Outro' : null,
+                            ])->filter()->implode(', ') ?: '—' }}
+                        </td>
+                        <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $contact->email ?: $contact->phone ?: '—' }}</td>
+                        @if ($this->canWrite)
+                            <td class="px-4 py-2 text-right text-xs space-x-2 whitespace-nowrap">
+                                <button wire:click="edit({{ $contact->id }})" title="Editar" class="inline-flex text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"><x-icon name="pencil" /></button>
+                                <button wire:click="delete({{ $contact->id }})" wire:confirm="Tem certeza que quer excluir este contato?" title="Excluir" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>
+                            </td>
+                        @endif
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-4 py-6 text-center text-xs text-gray-500 dark:text-neutral-400">Nenhum contato cadastrado ainda.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        {{ $contacts->links() }}
+    </div>
+</div>
