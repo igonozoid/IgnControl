@@ -24,6 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'module' => EnsureModuleAccess::class,
         ]);
+
+        // Confia no proxy do Cloudflare Tunnel (roda no mesmo PC, na porta
+        // local), pra o Laravel saber que a requisição chegou como HTTPS
+        // mesmo o túnel entregando em HTTP puro pra dentro da LAN. Sem
+        // isso, os sócios acessando de fora poderiam ter problema de
+        // cookie de sessão e links gerados com http:// em vez de https://.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
