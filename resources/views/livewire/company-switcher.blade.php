@@ -11,7 +11,7 @@
         <div class="py-1">
             @forelse ($companies as $company)
                 <button wire:click="switchTo({{ $company->id }})"
-                    class="block w-full text-left px-3 py-1.5 text-sm {{ $current?->id === $company->id ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-neutral-200' }} hover:bg-gray-100 dark:hover:bg-neutral-600">
+                    class="block w-full text-left px-3 py-1.5 text-sm {{ $current?->id === $company->id ? 'font-semibold text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-neutral-200' }} hover:bg-gray-100 dark:hover:bg-neutral-600">
                     {{ $company->name }}
                 </button>
             @empty

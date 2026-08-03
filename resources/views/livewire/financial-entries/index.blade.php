@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between mb-4">
         <h1 class="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100"><x-icon name="list" class="w-4 h-4" />Lançamentos Financeiros</h1>
         @if ($this->canWrite)
-            <button wire:click="create" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-medium hover:bg-indigo-700">
+            <button wire:click="create" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-medium hover:bg-green-700">
                 <x-icon name="plus" />
                 Novo lançamento
             </button>
@@ -17,7 +17,7 @@
                     wire:click="$set('tab', '{{ $value }}')"
                     @class([
                         'px-3 py-1.5 rounded-t-md border-b-2 text-xs font-semibold',
-                        'border-indigo-600 text-indigo-700 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400' => $tab === $value,
+                        'border-green-600 text-green-700 bg-green-50 dark:bg-green-500/10 dark:text-green-400' => $tab === $value,
                         'border-transparent text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-700/50' => $tab !== $value,
                     ])>
                     {{ $label }}
@@ -199,7 +199,7 @@
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700">
+                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700">
                     <x-icon name="check" />
                     Salvar
                 </button>
@@ -266,7 +266,7 @@
                                 @if ($entry->status === 'pending')
                                     <button wire:click="markAsPaid({{ $entry->id }})" title="Baixar" class="inline-flex text-[#15803d] dark:text-[#86efac] hover:opacity-75"><x-icon name="check-circle" /></button>
                                 @endif
-                                <button wire:click="edit({{ $entry->id }})" title="Editar" class="inline-flex text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"><x-icon name="pencil" /></button>
+                                <button wire:click="edit({{ $entry->id }})" title="Editar" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="pencil" /></button>
                                 <button wire:click="delete({{ $entry->id }})" wire:confirm="Tem certeza que quer excluir este lançamento?" title="Excluir" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>
                             @endif
                         </td>

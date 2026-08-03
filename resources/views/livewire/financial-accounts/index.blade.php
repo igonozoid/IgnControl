@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between mb-4">
         <h1 class="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100"><x-icon name="bank" class="w-4 h-4" />Contas Financeiras</h1>
         @if ($this->canWrite)
-            <button wire:click="create" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-medium hover:bg-indigo-700">
+            <button wire:click="create" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md text-xs font-medium hover:bg-green-700">
                 <x-icon name="plus" />
                 Nova conta
             </button>
@@ -71,7 +71,7 @@
             </div>
 
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700">
+                <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700">
                     <x-icon name="check" />
                     Salvar
                 </button>
@@ -105,7 +105,7 @@
                         <td class="px-4 py-2 text-xs text-gray-900 dark:text-neutral-100 text-right">{{ number_format((float) $account->currentBalance(), 2, ',', '.') }}</td>
                         @if ($this->canWrite)
                             <td class="px-4 py-2 text-right text-xs space-x-2 whitespace-nowrap">
-                                <button wire:click="edit({{ $account->id }})" title="Editar" class="inline-flex text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"><x-icon name="pencil" /></button>
+                                <button wire:click="edit({{ $account->id }})" title="Editar" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="pencil" /></button>
                                 <button wire:click="delete({{ $account->id }})" wire:confirm="Tem certeza que quer excluir esta conta?" title="Excluir" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>
                             </td>
                         @endif

@@ -1,7 +1,7 @@
 <div class="max-w-5xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between mb-4">
         <h1 class="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100"><x-icon name="chart" class="w-4 h-4" />Contas a Receber por Cliente</h1>
-        <a href="{{ route('reports.index') }}" wire:navigate class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+        <a href="{{ route('reports.index') }}" wire:navigate class="text-xs text-green-600 dark:text-green-400 hover:underline">
             &larr; Relatórios
         </a>
     </div>

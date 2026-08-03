@@ -36,36 +36,36 @@ new class extends Component
     <!-- Links de navegação -->
     <nav class="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto text-xs">
         <a href="{{ route('dashboard') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('dashboard') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="dashboard" />
             {{ __('Dashboard') }}
         </a>
 
         <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Financeiro</p>
         <a href="{{ route('financial-accounts.index') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('financial-accounts.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('financial-accounts.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="bank" />
             {{ __('Contas Financeiras') }}
         </a>
         <a href="{{ route('categories.index') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('categories.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('categories.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="tag" />
             {{ __('Categorias') }}
         </a>
         <a href="{{ route('cost-centers.index') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('cost-centers.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('cost-centers.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="briefcase" />
             {{ __('Centros de Custo') }}
         </a>
         <a href="{{ route('financial-entries.index') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('financial-entries.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('financial-entries.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="list" />
             {{ __('Lançamentos') }}
         </a>
 
         <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Contatos</p>
         <a href="{{ route('contacts.index') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('contacts.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('contacts.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="users" />
             {{ __('Contatos') }}
         </a>
@@ -73,7 +73,7 @@ new class extends Component
         @if (auth()->user()->hasModuleAccess('reports', 'read'))
             <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Relatórios</p>
             <a href="{{ route('reports.index') }}" wire:navigate
-                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('reports.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('reports.*') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
                 <x-icon name="chart" />
                 {{ __('Relatórios') }}
             </a>
@@ -82,7 +82,7 @@ new class extends Component
         @if (auth()->user()->hasModuleAccess('admin', 'full'))
             <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Administração</p>
             <a href="{{ route('admin.users.index') }}" wire:navigate
-                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('admin.users.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('admin.users.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
                 <x-icon name="shield" />
                 {{ __('Usuários e Permissões') }}
             </a>
@@ -100,7 +100,7 @@ new class extends Component
     }">
         <button @click="toggle()" class="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs text-gray-600 hover:bg-gray-50 dark:text-neutral-300 dark:hover:bg-neutral-700/50">
             <span x-text="dark ? 'Modo escuro' : 'Modo claro'"></span>
-            <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" :class="dark ? 'bg-indigo-600' : 'bg-gray-300'">
+            <span class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" :class="dark ? 'bg-green-600' : 'bg-gray-300'">
                 <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform" :class="dark ? 'translate-x-4' : 'translate-x-0.5'"></span>
             </span>
         </button>
