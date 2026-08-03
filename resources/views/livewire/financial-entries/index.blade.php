@@ -103,6 +103,13 @@
         </div>
     </div>
 
+    @if ($lockError)
+        <div class="flex items-center gap-2 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs rounded-lg px-3 py-2 mb-3">
+            <x-icon name="lock" class="w-4 h-4" />
+            {{ $lockError }}
+        </div>
+    @endif
+
     {{-- Formulário --}}
     <x-slide-over show="showForm" close="cancel" title="{{ ($editingId ? 'Editar lançamento' : 'Novo lançamento') . ' — ' . ['expense' => 'Despesa', 'income' => 'Receita', 'transfer' => 'Transferência'][$tab] }}">
         <form wire:submit="save" class="space-y-3 text-xs">

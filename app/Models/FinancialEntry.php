@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\PeriodLockedException;
 use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -67,6 +68,36 @@ class FinancialEntry extends Model
                 $entry->exchange_rate_id = $rate->id;
             }
         });
+
+        // Última linha de defesa do fechamento de período: mesmo que uma
+        // tela esqueça de checar, o model recusa gravar/apagar algo cuja
+        // data (antiga ou nova) caia num período já fechado.
+        static::saving(function (self $entry) {
+            $entry->guardAgainstLockedPeriod($entry->exists ? $entry->getOriginal('due_date') : null);
+            $entry->guardAgainstLockedPeriod($entry->due_date);
+        });
+
+        static::deleting(function (self $entry) {
+            $entry->guardAgainstLockedPeriod($entry->due_date);
+        });
+    }
+
+    private function guardAgainstLockedPeriod(mixed $date): void
+    {
+        if (! $date) {
+            return;
+        }
+
+        // Numa criação, o 'saving' dispara ANTES do 'creating' — que é
+        // quem preenche company_id (via BelongsToCompany). Por isso não dá
+        // pra confiar só em $this->company_id aqui: cai pra empresa ativa
+        // do usuário logado quando o registro ainda não tem uma definida.
+        $companyId = $this->company_id ?: static::currentCompanyId();
+        $company = $companyId ? Company::find($companyId) : null;
+
+        if ($company && $company->isDateLocked((string) $date)) {
+            throw new PeriodLockedException;
+        }
     }
 
     public function financialAccount(): BelongsTo

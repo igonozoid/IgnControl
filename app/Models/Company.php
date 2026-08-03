@@ -17,11 +17,26 @@ class Company extends Model
         'tax_id',
         'base_currency_code',
         'is_active',
+        'locked_through',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'locked_through' => 'date:Y-m-d',
     ];
+
+    /**
+     * Um lançamento com essa data de vencimento está dentro do período
+     * fechado (não pode ser criado/editado/excluído)?
+     */
+    public function isDateLocked(?string $date): bool
+    {
+        if (! $this->locked_through || ! $date) {
+            return false;
+        }
+
+        return \Illuminate\Support\Carbon::parse($date)->lte($this->locked_through);
+    }
 
     public function users(): BelongsToMany
     {

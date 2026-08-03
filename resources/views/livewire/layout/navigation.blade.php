@@ -86,6 +86,11 @@ new class extends Component
                 <x-icon name="shield" />
                 {{ __('Usuários e Permissões') }}
             </a>
+            <a href="{{ route('admin.period-lock.index') }}" wire:navigate
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('admin.period-lock.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                <x-icon name="lock" />
+                {{ __('Fechamento de Período') }}
+            </a>
         @endif
     </nav>
 

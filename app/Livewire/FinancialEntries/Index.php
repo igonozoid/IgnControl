@@ -2,6 +2,7 @@
 
 namespace App\Livewire\FinancialEntries;
 
+use App\Exceptions\PeriodLockedException;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\CostCenter;
@@ -53,6 +54,9 @@ class Index extends Component
     // Formulário
     public bool $showForm = false;
     public ?int $editingId = null;
+
+    // Mensagem exibida quando uma ação esbarra no fechamento de período.
+    public ?string $lockError = null;
 
     #[Validate('required|exists:financial_accounts,id')]
     public ?int $financial_account_id = null;
@@ -133,6 +137,7 @@ class Index extends Component
     {
         abort_unless($this->canWrite, 403);
         $this->resetForm();
+        $this->lockError = null;
         $this->showForm = true;
     }
 
@@ -154,6 +159,7 @@ class Index extends Component
         $this->description = (string) $entry->description;
         $this->due_date = $entry->due_date->toDateString();
         $this->paid_date = $entry->paid_date?->toDateString() ?? '';
+        $this->lockError = null;
         $this->showForm = true;
     }
 
@@ -186,10 +192,18 @@ class Index extends Component
         $data['type'] = $this->tab;
         $data['status'] = ! empty($data['paid_date']) ? 'paid' : 'pending';
 
-        if ($this->editingId) {
-            FinancialEntry::query()->findOrFail($this->editingId)->update($data);
-        } else {
-            FinancialEntry::query()->create($data);
+        $this->lockError = null;
+
+        try {
+            if ($this->editingId) {
+                FinancialEntry::query()->findOrFail($this->editingId)->update($data);
+            } else {
+                FinancialEntry::query()->create($data);
+            }
+        } catch (PeriodLockedException $e) {
+            $this->lockError = $e->getMessage();
+
+            return;
         }
 
         $this->showForm = false;
@@ -205,16 +219,29 @@ class Index extends Component
     {
         abort_unless($this->canWrite, 403);
 
-        FinancialEntry::query()->findOrFail($id)->update([
-            'status' => 'paid',
-            'paid_date' => now()->toDateString(),
-        ]);
+        $this->lockError = null;
+
+        try {
+            FinancialEntry::query()->findOrFail($id)->update([
+                'status' => 'paid',
+                'paid_date' => now()->toDateString(),
+            ]);
+        } catch (PeriodLockedException $e) {
+            $this->lockError = $e->getMessage();
+        }
     }
 
     public function delete(int $id): void
     {
         abort_unless($this->canWrite, 403);
-        FinancialEntry::query()->findOrFail($id)->delete();
+
+        $this->lockError = null;
+
+        try {
+            FinancialEntry::query()->findOrFail($id)->delete();
+        } catch (PeriodLockedException $e) {
+            $this->lockError = $e->getMessage();
+        }
     }
 
     public function cancel(): void

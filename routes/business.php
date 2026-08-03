@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Admin\PeriodLock as AdminPeriodLock;
 use App\Livewire\Admin\Users as AdminUsers;
 use App\Livewire\Categories\Index as CategoriesIndex;
 use App\Livewire\Contacts\Index as ContactsIndex;
@@ -26,6 +27,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/financeiro/lancamentos/{financialEntry}/recibo', [FinancialEntryReceiptController::class, 'show'])->name('financial-entries.receipt');
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
+    Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
 
     Route::get('/relatorios', ReportsIndex::class)->name('reports.index');
     Route::get('/relatorios/dre', ReportsDre::class)->name('reports.dre');
