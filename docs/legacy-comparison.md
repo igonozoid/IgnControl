@@ -6,13 +6,12 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
 
 ## Lançamentos / Transferências
 
-- **Transferência entre moedas diferentes** (Alta prioridade). O legado
-  permite transferir entre contas de moedas diferentes: valor de origem,
-  valor de destino, taxa de câmbio e tarifa da operação, tudo em campos
-  separados. Hoje nossa transferência só tem um campo de valor — se as
-  duas contas forem da mesma moeda funciona igual, mas entre moedas
-  diferentes (ex: conta em R$ pra conta em US$) não dá pra registrar
-  corretamente.
+- ~~**Transferência entre moedas diferentes**~~ — feito. Quando origem e
+  destino são de moedas diferentes, o formulário pede "Valor de destino"
+  e "Tarifa da operação" (a taxa de câmbio é calculada automaticamente
+  entre os dois valores, só informativa). O saldo de cada conta já
+  considera isso: a origem debita o valor + a tarifa, o destino credita
+  o valor convertido, não o que saiu.
 - **Nº do documento e observações na transferência** (Média). O legado
   tem campo de documento e de observações na transferência; a nossa não
   tem nenhum dos dois (só nos lançamentos de despesa/receita).

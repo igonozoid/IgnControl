@@ -48,22 +48,31 @@ class FinancialAccount extends Model
     /**
      * Saldo atual = saldo inicial + entradas pagas - saídas pagas
      * (transferências contam como saída na origem e entrada no destino).
+     *
+     * Numa transferência entre contas de moedas diferentes, o que sai da
+     * origem (amount, + a tarifa da operação) não é o mesmo número que
+     * chega no destino (destination_amount) — por isso a saída soma
+     * "amount + fee_amount" e a entrada usa "destination_amount" quando
+     * preenchido, caindo pra "amount" (comportamento de sempre) quando a
+     * transferência é na mesma moeda e esse campo ficou em branco.
      */
     public function currentBalance(): string
     {
-        $paidOut = $this->entries()
+        $paidOut = (float) $this->entries()
             ->whereIn('type', ['expense', 'transfer'])
             ->where('status', 'paid')
-            ->sum('amount');
+            ->selectRaw('COALESCE(SUM(amount + COALESCE(fee_amount, 0)), 0) as total')
+            ->value('total');
 
         $paidIn = $this->entries()
             ->where('type', 'income')
             ->where('status', 'paid')
             ->sum('amount');
 
-        $transfersIn = $this->incomingTransfers()
+        $transfersIn = (float) $this->incomingTransfers()
             ->where('status', 'paid')
-            ->sum('amount');
+            ->selectRaw('COALESCE(SUM(COALESCE(destination_amount, amount)), 0) as total')
+            ->value('total');
 
         return bcadd(bcadd($this->opening_balance, $paidIn, 4), bcsub($transfersIn, $paidOut, 4), 4);
     }

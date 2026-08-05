@@ -23,6 +23,9 @@ class FinancialEntry extends Model
         'cost_center_id',
         'currency_code',
         'amount',
+        'destination_amount',
+        'exchange_rate',
+        'fee_amount',
         'exchange_rate_id',
         'description',
         'document_number',
@@ -35,6 +38,9 @@ class FinancialEntry extends Model
 
     protected $casts = [
         'amount' => 'decimal:4',
+        'destination_amount' => 'decimal:4',
+        'exchange_rate' => 'decimal:6',
+        'fee_amount' => 'decimal:4',
         // 'date:Y-m-d' (em vez de 'date') força o Eloquent a gravar e a
         // serializar só a data, sem hora — evita que o SQLite (usado nos
         // testes) grave um timestamp completo que quebraria comparações

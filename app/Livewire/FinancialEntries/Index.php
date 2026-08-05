@@ -104,6 +104,18 @@ class Index extends Component
     #[Validate('required|numeric|gt:0')]
     public string $amount = '';
 
+    // Só usados em transferência entre contas de moedas diferentes (ver
+    // getIsCrossCurrencyTransferProperty()). destination_amount é quanto
+    // chega de fato na conta de destino — quando as duas contas são da
+    // mesma moeda, nem aparece no formulário, e o saldo assume que chegou
+    // o mesmo valor que saiu (comportamento de sempre). fee_amount é a
+    // tarifa da operação, debitada a mais da conta de origem.
+    #[Validate('nullable|numeric|gt:0')]
+    public string $destination_amount = '';
+
+    #[Validate('nullable|numeric|min:0')]
+    public string $fee_amount = '';
+
     #[Validate('nullable|string')]
     public string $description = '';
 
@@ -196,6 +208,33 @@ class Index extends Component
         return Auth::user()->hasModuleAccess('financial', 'full');
     }
 
+    /**
+     * Transferência entre contas de moedas diferentes — só nesse caso o
+     * formulário mostra "Valor de destino" e "Tarifa". Contas na mesma
+     * moeda continuam com um "Valor" só, como sempre foi.
+     */
+    public function getIsCrossCurrencyTransferProperty(): bool
+    {
+        if ($this->tab !== 'transfer' || ! $this->financial_account_id || ! $this->destination_account_id) {
+            return false;
+        }
+
+        $sourceCurrency = FinancialAccount::query()->find($this->financial_account_id)?->currency_code;
+        $destinationCurrency = FinancialAccount::query()->find($this->destination_account_id)?->currency_code;
+
+        return $sourceCurrency && $destinationCurrency && $sourceCurrency !== $destinationCurrency;
+    }
+
+    /** Taxa implícita entre o valor de origem e o de destino — só pra mostrar na tela, informativo. */
+    public function getTransferExchangeRatePreviewProperty(): ?string
+    {
+        if (! $this->isCrossCurrencyTransfer || (float) $this->amount <= 0 || $this->destination_amount === '') {
+            return null;
+        }
+
+        return number_format((float) $this->destination_amount / (float) $this->amount, 6, ',', '.');
+    }
+
     public function updatingTab(): void
     {
         $this->resetPage();
@@ -276,7 +315,7 @@ class Index extends Component
             'financial_account_id', 'destination_account_id', 'contact_id',
             'category_id', 'cost_center_id', 'amount', 'description',
             'document_number', 'paid_date', 'editingId',
-            'installmentsEnabled',
+            'installmentsEnabled', 'destination_amount', 'fee_amount',
             'showQuickContact', 'quickContactName',
             'showQuickCategory', 'quickCategoryName',
             'showQuickCostCenter', 'quickCostCenterName',
@@ -311,6 +350,8 @@ class Index extends Component
         $this->cost_center_id = $entry->cost_center_id;
         $this->currency_code = $entry->currency_code;
         $this->amount = (string) $entry->amount;
+        $this->destination_amount = $entry->destination_amount !== null ? (string) $entry->destination_amount : '';
+        $this->fee_amount = $entry->fee_amount !== null ? (string) $entry->fee_amount : '';
         $this->description = (string) $entry->description;
         $this->document_number = (string) $entry->document_number;
         $this->due_date = $entry->due_date->toDateString();
@@ -339,6 +380,11 @@ class Index extends Component
 
         if ($this->tab === 'transfer') {
             $rules['destination_account_id'] = ['required', 'exists:financial_accounts,id', 'different:financial_account_id'];
+            $rules['fee_amount'] = ['nullable', 'numeric', 'min:0'];
+
+            if ($this->isCrossCurrencyTransfer) {
+                $rules['destination_amount'] = ['required', 'numeric', 'gt:0'];
+            }
         } else {
             $rules['contact_id'] = ['nullable', 'exists:contacts,id'];
             $rules['category_id'] = ['nullable', 'exists:categories,id'];
@@ -360,6 +406,21 @@ class Index extends Component
         $data['document_number'] = $data['document_number'] ?: null;
         $data['type'] = $this->tab;
         $data['status'] = ! empty($data['paid_date']) ? 'paid' : 'pending';
+
+        if ($this->tab === 'transfer') {
+            $data['fee_amount'] = ($data['fee_amount'] ?? '') !== '' ? $data['fee_amount'] : null;
+
+            // Valor de destino e taxa só fazem sentido entre moedas
+            // diferentes — numa transferência normal (mesma moeda) ficam
+            // nulos, e o saldo assume "chegou o mesmo que saiu" (ver
+            // FinancialAccount::currentBalance()).
+            if ($this->isCrossCurrencyTransfer && ! empty($data['destination_amount'])) {
+                $data['exchange_rate'] = bcdiv((string) $data['destination_amount'], (string) $data['amount'], 6);
+            } else {
+                $data['destination_amount'] = null;
+                $data['exchange_rate'] = null;
+            }
+        }
 
         $this->lockError = null;
 

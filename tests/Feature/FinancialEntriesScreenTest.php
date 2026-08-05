@@ -156,6 +156,66 @@ class FinancialEntriesScreenTest extends TestCase
             'financial_account_id' => $origin->id,
             'destination_account_id' => $destination->id,
         ]);
+
+        // Mesma moeda nas duas pontas — não deveria ter pedido valor de
+        // destino nem taxa (ficam nulos).
+        $entry = FinancialEntry::query()->where('financial_account_id', $origin->id)->firstOrFail();
+        $this->assertNull($entry->destination_amount);
+        $this->assertNull($entry->exchange_rate);
+    }
+
+    public function test_full_access_user_can_create_a_cross_currency_transfer_with_fee(): void
+    {
+        Currency::firstOrCreate(['code' => 'USD'], ['name' => 'Dólar', 'symbol' => 'US$']);
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $origin = FinancialAccount::factory()->create(['company_id' => $company->id, 'currency_code' => 'USD']);
+        $destination = FinancialAccount::factory()->create(['company_id' => $company->id, 'currency_code' => 'BRL']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'transfer')
+            ->call('create')
+            ->set('financial_account_id', $origin->id)
+            ->set('destination_account_id', $destination->id)
+            ->assertSet('isCrossCurrencyTransfer', true)
+            ->set('currency_code', 'USD')
+            ->set('amount', '100.00')
+            ->set('destination_amount', '540.00')
+            ->set('fee_amount', '5.00')
+            ->set('due_date', now()->toDateString())
+            ->call('save');
+
+        $this->assertDatabaseHas('financial_entries', [
+            'company_id' => $company->id,
+            'type' => 'transfer',
+            'financial_account_id' => $origin->id,
+            'destination_account_id' => $destination->id,
+            'amount' => '100.0000',
+            'destination_amount' => '540.0000',
+            'fee_amount' => '5.0000',
+            'exchange_rate' => '5.400000',
+        ]);
+    }
+
+    public function test_destination_amount_is_required_for_cross_currency_transfers(): void
+    {
+        Currency::firstOrCreate(['code' => 'USD'], ['name' => 'Dólar', 'symbol' => 'US$']);
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $origin = FinancialAccount::factory()->create(['company_id' => $company->id, 'currency_code' => 'USD']);
+        $destination = FinancialAccount::factory()->create(['company_id' => $company->id, 'currency_code' => 'BRL']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'transfer')
+            ->call('create')
+            ->set('financial_account_id', $origin->id)
+            ->set('destination_account_id', $destination->id)
+            ->set('amount', '100.00')
+            ->set('due_date', now()->toDateString())
+            ->call('save')
+            ->assertHasErrors(['destination_amount']);
     }
 
     public function test_marking_as_paid_updates_status_and_paid_date(): void

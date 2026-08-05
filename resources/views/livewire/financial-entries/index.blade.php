@@ -159,10 +159,10 @@
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">
                     {{ $tab === 'transfer' ? 'Conta de origem' : 'Conta' }}
                 </label>
-                <select wire:model="financial_account_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                <select wire:model.live="financial_account_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                     <option value="">— selecione —</option>
                     @foreach ($accounts as $account)
-                        <option value="{{ $account->id }}">{{ $account->name }}</option>
+                        <option value="{{ $account->id }}">{{ $account->name }} ({{ $account->currency_code }})</option>
                     @endforeach
                 </select>
                 @error('financial_account_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
@@ -171,14 +171,36 @@
             @if ($tab === 'transfer')
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">Conta de destino</label>
-                    <select wire:model="destination_account_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    <select wire:model.live="destination_account_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                         <option value="">— selecione —</option>
                         @foreach ($accounts as $account)
-                            <option value="{{ $account->id }}">{{ $account->name }}</option>
+                            <option value="{{ $account->id }}">{{ $account->name }} ({{ $account->currency_code }})</option>
                         @endforeach
                     </select>
                     @error('destination_account_id') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
+
+                @if ($this->isCrossCurrencyTransfer)
+                    <div class="rounded-md bg-blue-50 dark:bg-blue-500/10 p-3 space-y-3">
+                        <p class="text-blue-800 dark:text-blue-300">Contas em moedas diferentes — informe quanto chega na conta de destino.</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-medium text-gray-700 dark:text-neutral-300">Valor de destino</label>
+                                <input type="number" step="0.01" wire:model.live="destination_amount" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                                @error('destination_amount') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block font-medium text-gray-700 dark:text-neutral-300">Tarifa da operação (opcional)</label>
+                                <input type="number" step="0.01" wire:model="fee_amount" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                                <p class="text-gray-500 dark:text-neutral-400 mt-1">Debitada a mais da conta de origem, além do valor transferido.</p>
+                                @error('fee_amount') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        @if ($this->transferExchangeRatePreview)
+                            <p class="text-blue-700 dark:text-blue-400">Taxa implícita: 1 = {{ $this->transferExchangeRatePreview }}</p>
+                        @endif
+                    </div>
+                @endif
             @else
                 <div>
                     <div class="flex items-center justify-between">
@@ -267,8 +289,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Valor</label>
-                    <input type="number" step="0.01" wire:model="amount" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">{{ $this->isCrossCurrencyTransfer ? 'Valor de origem' : 'Valor' }}</label>
+                    <input type="number" step="0.01" wire:model.live="amount" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                     @error('amount') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
                 <div>

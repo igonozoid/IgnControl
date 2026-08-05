@@ -6,6 +6,7 @@ use App\Livewire\FinancialAccounts\Index;
 use App\Models\Company;
 use App\Models\Currency;
 use App\Models\FinancialAccount;
+use App\Models\FinancialEntry;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -121,5 +122,31 @@ class FinancialAccountsScreenTest extends TestCase
 
         Livewire::test(Index::class)->set('filterStatus', 'inactive')->assertSee('Conta Velha');
         Livewire::test(Index::class)->set('filterStatus', 'active')->assertDontSee('Conta Velha');
+    }
+
+    public function test_current_balance_accounts_for_cross_currency_transfer_and_fee(): void
+    {
+        Currency::firstOrCreate(['code' => 'USD'], ['name' => 'Dólar', 'symbol' => 'US$']);
+        $company = Company::factory()->create();
+        $usdAccount = FinancialAccount::factory()->create(['company_id' => $company->id, 'currency_code' => 'USD', 'opening_balance' => 0]);
+        $brlAccount = FinancialAccount::factory()->create(['company_id' => $company->id, 'currency_code' => 'BRL', 'opening_balance' => 0]);
+
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'type' => 'transfer',
+            'financial_account_id' => $usdAccount->id,
+            'destination_account_id' => $brlAccount->id,
+            'currency_code' => 'USD',
+            'amount' => '100.00',
+            'destination_amount' => '540.00',
+            'exchange_rate' => '5.400000',
+            'fee_amount' => '5.00',
+            'status' => 'paid',
+        ]);
+
+        // Origem: sai 100 (transferido) + 5 (tarifa) = -105.
+        $this->assertSame('-105.0000', $usdAccount->currentBalance());
+        // Destino: entra 540 (valor convertido, não os 100 que saíram).
+        $this->assertSame('540.0000', $brlAccount->currentBalance());
     }
 }
