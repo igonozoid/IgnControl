@@ -147,4 +147,25 @@ class CredentialsScreenTest extends TestCase
         $this->assertNotNull($log);
         $this->assertSame($user->id, $log->user_id);
     }
+
+    public function test_copying_a_password_writes_an_audit_log_entry(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $credential = Credential::factory()->create(['company_id' => $company->id, 'password' => 'segredo123']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('logCopy', $credential->id)
+            ->assertDispatched('credential-copied');
+
+        $log = AuditLog::query()
+            ->where('auditable_type', Credential::class)
+            ->where('auditable_id', $credential->id)
+            ->where('action', 'copied')
+            ->first();
+
+        $this->assertNotNull($log);
+        $this->assertSame($user->id, $log->user_id);
+    }
 }

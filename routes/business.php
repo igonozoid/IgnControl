@@ -2,7 +2,9 @@
 
 use App\Livewire\Admin\PeriodLock as AdminPeriodLock;
 use App\Livewire\Admin\Users as AdminUsers;
+use App\Http\Controllers\AuditLogPrintController;
 use App\Http\Controllers\ContactDocumentController;
+use App\Livewire\Admin\AuditLogs\Index as AdminAuditLogs;
 use App\Livewire\Admin\Credentials\Index as AdminCredentials;
 use App\Livewire\Categories\Index as CategoriesIndex;
 use App\Livewire\Contacts\Index as ContactsIndex;
@@ -38,6 +40,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
     Route::get('/admin/credenciais', AdminCredentials::class)->name('admin.credentials.index');
+    Route::get('/admin/auditoria', AdminAuditLogs::class)->name('admin.audit.index');
+    Route::get('/admin/auditoria/imprimir', [AuditLogPrintController::class, 'show'])->name('admin.audit.print');
 
     Route::get('/relatorios', ReportsIndex::class)->name('reports.index');
     Route::get('/relatorios/dre', ReportsDre::class)->name('reports.dre');

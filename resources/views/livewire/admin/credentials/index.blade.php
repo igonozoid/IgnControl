@@ -16,7 +16,20 @@
         Catálogo de acessos externos (SPC, Serasa, bancos, portais em geral).
         A senha fica criptografada e some da tela por padrão — só aparece
         depois de clicar em "mostrar", e isso fica registrado na auditoria.
+        Copiar a senha (Ctrl+C) também é registrado, com usuário, data e hora.
     </p>
+
+    <div
+        x-data="{ show: false, msg: '' }"
+        x-on:credential-copied.window="msg = $event.detail.message; show = true; clearTimeout(window.__credCopyTimeout); window.__credCopyTimeout = setTimeout(() => show = false, 8000)"
+        x-show="show"
+        x-transition
+        x-cloak
+        class="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 shadow-lg px-4 py-3 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2"
+    >
+        <x-icon name="shield" class="w-4 h-4 shrink-0 mt-0.5" />
+        <span x-text="msg"></span>
+    </div>
 
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -114,7 +127,7 @@
                             @if (! $credential->password)
                                 —
                             @elseif (in_array($credential->id, $revealed))
-                                <span class="text-gray-900 dark:text-neutral-100">{{ $credential->password }}</span>
+                                <span class="text-gray-900 dark:text-neutral-100 select-all" wire:copy="logCopy({{ $credential->id }})" title="Copiar fica registrado na auditoria">{{ $credential->password }}</span>
                                 <button type="button" wire:click="hide({{ $credential->id }})" class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300">ocultar</button>
                             @else
                                 ••••••••

@@ -144,6 +144,33 @@ class Index extends Component
         $this->revealed = array_values(array_diff($this->revealed, [$id]));
     }
 
+    /**
+     * Chamado pelo evento "copy" do navegador quando o usuário copia a
+     * senha em texto claro (Ctrl+C ou "copiar" do menu de contexto).
+     * Não tem como impedir a cópia, mas registramos quem, o quê e quando
+     * — e avisamos na hora, pra desencorajar levar senha de cliente pra
+     * fora do sistema.
+     */
+    public function logCopy(int $id): void
+    {
+        $credential = Credential::query()->findOrFail($id);
+
+        AuditLog::query()->create([
+            'company_id' => $credential->company_id,
+            'user_id' => Auth::id(),
+            'action' => 'copied',
+            'auditable_type' => Credential::class,
+            'auditable_id' => $credential->id,
+            'old_values' => null,
+            'new_values' => null,
+        ]);
+
+        $this->dispatch(
+            'credential-copied',
+            message: 'Cópia registrada na auditoria: '.Auth::user()->name.' — '.now()->format('d/m/Y H:i').' — "'.$credential->title.'".'
+        );
+    }
+
     public function render()
     {
         $credentials = Credential::query()
