@@ -42,6 +42,12 @@ permissões, e a trilha de auditoria.
 Ver [`SETUP.md`](SETUP.md) para o passo a passo completo (Composer, npm,
 banco de dados, `.env`).
 
+## Produção / acesso externo
+
+Ver [`PRODUCAO.md`](PRODUCAO.md) — notas sobre LAN + túnel para acesso
+externo, permissões de escrita remota, e como deixar o servidor no ar
+sem depender de um `.bat` na inicialização.
+
 Resumo:
 
 ```bash
