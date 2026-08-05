@@ -28,7 +28,7 @@ class Index extends Component
     public bool $showForm = false;
     public ?int $editingId = null;
 
-    #[Validate('required|in:login,bookmark,vault')]
+    #[Validate('required|in:login,bookmark,vault,note')]
     public string $category = 'login';
 
     #[Validate('required|string|max:255')]
@@ -92,8 +92,22 @@ class Index extends Component
     {
         abort_unless($this->canWrite, 403);
 
+        // Deixa o usuário digitar "www.google.com.br" sem precisar lembrar
+        // do "https://" — a regra de validação `url` do Laravel exige um
+        // esquema, então completamos automaticamente antes de validar.
+        if ($this->url !== '' && ! str_contains($this->url, '://')) {
+            $this->url = 'https://'.$this->url;
+        }
+
         $data = $this->validate();
+
+        // URL, usuário e senha são opcionais (dá pra guardar só uma
+        // anotação, tipo dados de cartão) — string vazia vira null em vez
+        // de poluir o banco.
+        $data['url'] = $data['url'] ?: null;
+        $data['username'] = $data['username'] ?: null;
         $data['password'] = $data['password'] ?: null;
+        $data['notes'] = $data['notes'] ?: null;
 
         if ($this->editingId) {
             Credential::query()->findOrFail($this->editingId)->update($data);

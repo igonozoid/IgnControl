@@ -44,6 +44,7 @@
                     <option value="login">Login</option>
                     <option value="bookmark">Marcador</option>
                     <option value="vault">Cofre técnico</option>
+                    <option value="note">Anotação (ex.: cartão)</option>
                 </select>
             </div>
         </div>
@@ -57,16 +58,19 @@
                     <option value="login">Login</option>
                     <option value="bookmark">Marcador</option>
                     <option value="vault">Cofre técnico</option>
+                    <option value="note">Anotação (ex.: cartão)</option>
                 </select>
             </div>
             <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">Título</label>
-                <input type="text" wire:model="title" placeholder="Ex.: SPC Brasil" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                <input type="text" wire:model="title" placeholder="Ex.: SPC Brasil ou Cartão Nubank" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                 @error('title') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                <p class="text-gray-500 dark:text-neutral-400 mt-1">URL, usuário e senha são opcionais — dá pra usar só o título e as observações (ex.: dados de um cartão de crédito).</p>
             </div>
             <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">URL</label>
-                <input type="url" wire:model="url" placeholder="https://..." class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                <input type="text" wire:model="url" placeholder="www.spcbrasil.org.br" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                <p class="text-gray-500 dark:text-neutral-400 mt-1">Pode digitar sem "https://" — a gente completa sozinho.</p>
                 @error('url') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -120,7 +124,7 @@
                             @else
                                 {{ $credential->title }}
                             @endif
-                            <span class="text-gray-400 dark:text-neutral-500">— {{ ['login' => 'Login', 'bookmark' => 'Marcador', 'vault' => 'Cofre técnico'][$credential->category] ?? $credential->category }}</span>
+                            <span class="text-gray-400 dark:text-neutral-500">— {{ ['login' => 'Login', 'bookmark' => 'Marcador', 'vault' => 'Cofre técnico', 'note' => 'Anotação'][$credential->category] ?? $credential->category }}</span>
                         </td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $credential->username ?: '—' }}</td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400 font-mono">

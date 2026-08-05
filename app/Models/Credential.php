@@ -19,7 +19,7 @@ class Credential extends Model
 {
     use BelongsToCompany, Auditable, HasFactory;
 
-    public const CATEGORIES = ['login', 'bookmark', 'vault'];
+    public const CATEGORIES = ['login', 'bookmark', 'vault', 'note'];
 
     protected $fillable = [
         'company_id',

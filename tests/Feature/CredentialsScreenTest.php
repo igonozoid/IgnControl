@@ -90,6 +90,48 @@ class CredentialsScreenTest extends TestCase
         $this->assertSame('segredo123', $credential->password);
     }
 
+    public function test_url_without_scheme_gets_https_prepended_automatically(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('title', 'Serasa')
+            ->set('url', 'www.serasa.com.br')
+            ->call('save');
+
+        $this->assertDatabaseHas('credentials', [
+            'title' => 'Serasa',
+            'url' => 'https://www.serasa.com.br',
+        ]);
+    }
+
+    public function test_can_save_a_note_only_credential_without_url_login_or_password(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('category', 'note')
+            ->set('title', 'Cartão Nubank')
+            ->set('notes', 'Final 1234, validade 09/29')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('credentials', [
+            'company_id' => $company->id,
+            'category' => 'note',
+            'title' => 'Cartão Nubank',
+            'url' => null,
+            'username' => null,
+            'notes' => 'Final 1234, validade 09/29',
+        ]);
+    }
+
     public function test_password_is_stored_encrypted_not_in_plain_text(): void
     {
         $company = Company::factory()->create();
