@@ -603,6 +603,7 @@ class Index extends Component
                     ->orWhereIn('id', array_filter([$this->category_id, $this->filterCategoryId])))
                 ->orderBy('name')->get(),
             'costCenters' => CostCenter::query()
+                ->where($this->tab === 'income' ? 'applies_to_revenue' : 'applies_to_expense', true)
                 ->where(fn ($q) => $q->where('is_active', true)
                     ->orWhereIn('id', array_filter([$this->cost_center_id, $this->filterCostCenterId])))
                 ->orderBy('name')->get(),

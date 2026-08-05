@@ -46,6 +46,28 @@
                 </div>
             </div>
 
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300 mb-1">Aplica a</label>
+                <div class="flex gap-4 text-gray-700 dark:text-neutral-300">
+                    <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="applies_to_expense" class="rounded dark:bg-neutral-700 dark:border-neutral-600"> Despesas</label>
+                    <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="applies_to_revenue" class="rounded dark:bg-neutral-700 dark:border-neutral-600"> Receitas</label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Orçamento de despesa (opcional)</label>
+                    <input type="number" step="0.01" min="0" wire:model="expense_budget" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('expense_budget') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Projeção de receita (opcional)</label>
+                    <input type="number" step="0.01" min="0" wire:model="revenue_projection" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('revenue_projection') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+            </div>
+            <p class="text-gray-400 dark:text-neutral-500 -mt-2">Base pra um relatório de orçado x realizado futuro — não é usado em nenhum lançamento hoje.</p>
+
             <div class="flex items-center gap-2">
                 <input type="checkbox" wire:model="is_active" id="is_active" class="rounded border-gray-300 dark:border-neutral-600 text-green-600">
                 <label for="is_active" class="text-gray-700 dark:text-neutral-300">Ativo</label>
@@ -71,6 +93,7 @@
                 <tr>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Nome</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Código</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Aplica a</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Situação</th>
                     @if ($this->canWrite)
                         <th class="px-4 py-2"></th>
@@ -87,6 +110,17 @@
                             @endif
                         </td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $costCenter->code ?? '—' }}</td>
+                        <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">
+                            @if ($costCenter->applies_to_expense && $costCenter->applies_to_revenue)
+                                Despesas e receitas
+                            @elseif ($costCenter->applies_to_expense)
+                                Só despesas
+                            @elseif ($costCenter->applies_to_revenue)
+                                Só receitas
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td class="px-4 py-2 text-xs">
                             @if ($costCenter->is_active)
                                 <span class="text-[#15803d] dark:text-[#86efac]">Ativo</span>
@@ -106,7 +140,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-6 text-center text-xs text-gray-500 dark:text-neutral-400">Nenhum centro de custo cadastrado ainda.</td>
+                        <td colspan="5" class="px-4 py-6 text-center text-xs text-gray-500 dark:text-neutral-400">Nenhum centro de custo cadastrado ainda.</td>
                     </tr>
                 @endforelse
             </tbody>

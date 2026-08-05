@@ -16,11 +16,19 @@ class CostCenter extends Model
         'company_id',
         'name',
         'code',
+        'applies_to_expense',
+        'applies_to_revenue',
+        'expense_budget',
+        'revenue_projection',
         'is_active',
         'needs_review',
     ];
 
     protected $casts = [
+        'applies_to_expense' => 'boolean',
+        'applies_to_revenue' => 'boolean',
+        'expense_budget' => 'decimal:2',
+        'revenue_projection' => 'decimal:2',
         'is_active' => 'boolean',
         'needs_review' => 'boolean',
     ];

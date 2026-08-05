@@ -36,6 +36,18 @@ class Index extends Component
     #[Validate('boolean')]
     public bool $is_active = true;
 
+    #[Validate('boolean')]
+    public bool $applies_to_expense = true;
+
+    #[Validate('boolean')]
+    public bool $applies_to_revenue = true;
+
+    #[Validate('nullable|numeric|min:0')]
+    public string $expense_budget = '';
+
+    #[Validate('nullable|numeric|min:0')]
+    public string $revenue_projection = '';
+
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('financial', 'read'), 403);
@@ -49,8 +61,10 @@ class Index extends Component
     public function create(): void
     {
         abort_unless($this->canWrite, 403);
-        $this->reset(['name', 'code', 'editingId']);
+        $this->reset(['name', 'code', 'editingId', 'expense_budget', 'revenue_projection']);
         $this->is_active = true;
+        $this->applies_to_expense = true;
+        $this->applies_to_revenue = true;
         $this->showForm = true;
     }
 
@@ -64,6 +78,10 @@ class Index extends Component
         $this->name = $costCenter->name;
         $this->code = (string) $costCenter->code;
         $this->is_active = $costCenter->is_active;
+        $this->applies_to_expense = $costCenter->applies_to_expense;
+        $this->applies_to_revenue = $costCenter->applies_to_revenue;
+        $this->expense_budget = $costCenter->expense_budget !== null ? (string) $costCenter->expense_budget : '';
+        $this->revenue_projection = $costCenter->revenue_projection !== null ? (string) $costCenter->revenue_projection : '';
         $this->showForm = true;
     }
 
@@ -72,6 +90,8 @@ class Index extends Component
         abort_unless($this->canWrite, 403);
 
         $data = $this->validate();
+        $data['expense_budget'] = $data['expense_budget'] !== '' ? $data['expense_budget'] : null;
+        $data['revenue_projection'] = $data['revenue_projection'] !== '' ? $data['revenue_projection'] : null;
 
         if ($this->editingId) {
             $data['needs_review'] = false;
@@ -81,7 +101,7 @@ class Index extends Component
         }
 
         $this->showForm = false;
-        $this->reset(['name', 'code', 'editingId']);
+        $this->reset(['name', 'code', 'editingId', 'expense_budget', 'revenue_projection']);
     }
 
     public function delete(int $id): void
@@ -99,7 +119,7 @@ class Index extends Component
     public function cancel(): void
     {
         $this->showForm = false;
-        $this->reset(['name', 'code', 'editingId']);
+        $this->reset(['name', 'code', 'editingId', 'expense_budget', 'revenue_projection']);
     }
 
     public function render()

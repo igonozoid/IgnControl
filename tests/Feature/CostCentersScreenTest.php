@@ -79,6 +79,51 @@ class CostCentersScreenTest extends TestCase
         $this->assertDatabaseMissing('cost_centers', ['id' => $costCenter->id]);
     }
 
+    public function test_full_access_user_can_set_applies_to_and_budget_fields(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Marketing')
+            ->set('applies_to_expense', true)
+            ->set('applies_to_revenue', false)
+            ->set('expense_budget', '15000.50')
+            ->call('save');
+
+        $this->assertDatabaseHas('cost_centers', [
+            'company_id' => $company->id,
+            'name' => 'Marketing',
+            'applies_to_expense' => true,
+            'applies_to_revenue' => false,
+            'expense_budget' => '15000.50',
+            'revenue_projection' => null,
+        ]);
+    }
+
+    public function test_cost_center_that_only_applies_to_revenue_is_not_offered_for_expense_entries(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        CostCenter::factory()->create([
+            'company_id' => $company->id,
+            'name' => 'Comercial (só receita)',
+            'applies_to_expense' => false,
+            'applies_to_revenue' => true,
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(\App\Livewire\FinancialEntries\Index::class)
+            ->set('tab', 'expense')
+            ->assertDontSee('Comercial (só receita)');
+
+        Livewire::test(\App\Livewire\FinancialEntries\Index::class)
+            ->set('tab', 'income')
+            ->assertSee('Comercial (só receita)');
+    }
+
     public function test_filter_by_status_only_shows_matching_cost_centers(): void
     {
         $company = Company::factory()->create();

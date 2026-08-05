@@ -32,14 +32,15 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
 
 ## Centros de custo
 
-- **Aplica a despesas / aplica a receitas** (Média). O legado tem dois
-  checkboxes pra dizer se um centro de custo vale só pra despesa, só pra
-  receita, ou pras duas coisas. Hoje qualquer centro de custo aparece nos
-  dois formulários sem distinção.
-- **Orçamento (despesa) e projeção (receita)** (Baixa/Média). Campos de
-  valor orçado por centro de custo — dá pra fazer relatório de
-  orçado x realizado depois. Não é usado agora, mas é base pra um
-  relatório futuro.
+- ~~**Aplica a despesas / aplica a receitas**~~ — feito. Dois checkboxes
+  no cadastro; por padrão os dois marcados (comportamento antigo,
+  continua igual pra quem não mexer). Um centro de custo que só aplica a
+  receita não aparece mais no dropdown de despesa (e vice-versa) —
+  mesmo padrão de "ativo" filtrando o dropdown do gap 1.
+- ~~**Orçamento (despesa) e projeção (receita)**~~ — feito, só os campos
+  (`expense_budget`/`revenue_projection`, opcionais). Ainda não tem
+  relatório de orçado x realizado usando eles — fica pra quando surgir
+  a necessidade concreta, como o doc já dizia.
 
 ## Contas financeiras
 
