@@ -7,6 +7,7 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Contact extends Model
 {
@@ -84,5 +85,30 @@ class Contact extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ContactDocument::class);
+    }
+
+    public function employeeProfile(): HasOne
+    {
+        return $this->hasOne(EmployeeProfile::class);
+    }
+
+    public function salaryEntries(): HasMany
+    {
+        return $this->hasMany(EmployeeSalaryEntry::class);
+    }
+
+    public function vacations(): HasMany
+    {
+        return $this->hasMany(EmployeeVacation::class);
+    }
+
+    public function thirteenthSalaries(): HasMany
+    {
+        return $this->hasMany(EmployeeThirteenthSalary::class);
+    }
+
+    public function benefits(): HasMany
+    {
+        return $this->hasMany(EmployeeBenefit::class);
     }
 }

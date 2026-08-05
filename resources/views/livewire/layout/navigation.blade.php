@@ -70,6 +70,15 @@ new class extends Component
             {{ __('Contatos') }}
         </a>
 
+        @if (auth()->user()->hasModuleAccess('hr', 'read'))
+            <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">RH</p>
+            <a href="{{ route('hr.index') }}" wire:navigate
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('hr.*') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                <x-icon name="briefcase" />
+                {{ __('Funcionários') }}
+            </a>
+        @endif
+
         @if (auth()->user()->hasModuleAccess('agenda', 'read'))
             <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Agenda</p>
             <a href="{{ route('tasks.index') }}" wire:navigate

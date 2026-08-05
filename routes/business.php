@@ -12,6 +12,8 @@ use App\Livewire\CostCenters\Index as CostCentersIndex;
 use App\Livewire\FinancialAccounts\Index as FinancialAccountsIndex;
 use App\Http\Controllers\FinancialEntryReceiptController;
 use App\Livewire\FinancialEntries\Index as FinancialEntriesIndex;
+use App\Livewire\Hr\Index as HrIndex;
+use App\Livewire\Hr\Profile as HrProfile;
 use App\Livewire\Reports\AccountStatement as ReportsAccountStatement;
 use App\Livewire\Reports\Analytical as ReportsAnalytical;
 use App\Livewire\Reports\CashFlow as ReportsCashFlow;
@@ -37,6 +39,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
     Route::get('/contatos/documentos/{contactDocument}', [ContactDocumentController::class, 'download'])->name('contacts.documents.download');
     Route::get('/agenda', TasksIndex::class)->name('tasks.index');
+    Route::get('/rh', HrIndex::class)->name('hr.index');
+    Route::get('/rh/{contact}/ficha', HrProfile::class)->name('hr.profile');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
     Route::get('/admin/credenciais', AdminCredentials::class)->name('admin.credentials.index');

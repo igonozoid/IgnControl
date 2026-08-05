@@ -160,6 +160,12 @@
                     <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_employee" class="dark:bg-neutral-700 dark:border-neutral-600"> Funcionário</label>
                     <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_other" class="dark:bg-neutral-700 dark:border-neutral-600"> Outro</label>
                 </div>
+                @if ($is_employee && $editingId)
+                    <a href="{{ route('hr.profile', $editingId) }}" wire:navigate class="inline-flex items-center gap-1 mt-2 text-green-600 dark:text-green-400 hover:text-green-800">
+                        <x-icon name="briefcase" class="w-3.5 h-3.5" />
+                        Ver ficha de RH
+                    </a>
+                @endif
             </div>
 
             <div class="border-t border-gray-100 dark:border-neutral-700 pt-3">
