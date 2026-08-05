@@ -3,7 +3,12 @@
 namespace App\Livewire\Contacts;
 
 use App\Models\Contact;
+use App\Models\Credential;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
@@ -46,6 +51,12 @@ class Index extends Component
 
     #[Validate('nullable|string|max:255')]
     public string $district = '';
+
+    #[Validate('nullable|string|max:255')]
+    public string $address_line1 = '';
+
+    #[Validate('nullable|string|max:255')]
+    public string $address_line2 = '';
 
     #[Validate('nullable|string|max:255')]
     public string $city = '';
@@ -91,6 +102,16 @@ class Index extends Component
     public array $bankReferenceRows = [];
     public array $contactBankAccountRows = [];
 
+    // Busca Básica (CNPJ): guarda o resultado da última consulta pra
+    // anexar o PDF só no momento do "Salvar" — se o contato ainda não
+    // existe (cadastro novo), não tem em quem anexar antes disso.
+    public bool $searchingCnpj = false;
+    public ?array $lastCnpjLookupPayload = null;
+    public string $lastCnpjLookupDocument = '';
+
+    /** Documentos já anexados ao contato em edição (só leitura na tela). */
+    public array $existingDocuments = [];
+
     #[Validate('boolean')]
     public bool $is_supplier = false;
 
@@ -116,16 +137,116 @@ class Index extends Component
         return Auth::user()->hasModuleAccess('contacts', 'full');
     }
 
+    /**
+     * Documento parece CNPJ (14 dígitos)? É o que decide se o botão
+     * "Busca Básica" aparece — CPF não tem fonte pública gratuita, então
+     * não faz sentido oferecer o botão nesse caso.
+     */
+    public function getIsCnpjDocumentProperty(): bool
+    {
+        return strlen(preg_replace('/\D/', '', $this->document)) === 14;
+    }
+
+    /**
+     * Links salvos no cofre de credenciais (Admin > Credenciais) — a
+     * "Busca Avançada" abre um desses em nova aba. Só entram credenciais
+     * com URL preenchida (uma sem link não serve pra abrir nada).
+     */
+    public function getCreditSearchLinksProperty(): Collection
+    {
+        if (! Auth::user()->hasModuleAccess('credentials', 'read')) {
+            return collect();
+        }
+
+        return Credential::query()
+            ->whereNotNull('url')
+            ->where('url', '!=', '')
+            ->orderBy('title')
+            ->get(['id', 'title', 'url']);
+    }
+
     private function resetForm(): void
     {
         $this->reset([
             'name', 'document', 'birth_date', 'secondary_document', 'email', 'phone', 'district',
-            'city', 'state', 'postal_code', 'country',
+            'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
             'purchase_frequency', 'classification', 'credit_limit', 'credit_checked',
             'credit_check_date', 'has_credit_issue', 'credit_issue_location', 'mother_name',
             'commercialReferenceRows', 'bankReferenceRows', 'contactBankAccountRows',
+            'lastCnpjLookupPayload', 'lastCnpjLookupDocument', 'existingDocuments',
             'is_supplier', 'is_customer', 'is_employee', 'is_other',
             'notes', 'editingId',
+        ]);
+    }
+
+    /**
+     * Busca Básica: consulta o CNPJ na BrasilAPI (fonte pública gratuita,
+     * dados da Receita Federal) e preenche os campos automaticamente. O
+     * PDF só é gerado e anexado no "Salvar" (ver save()), porque um
+     * contato novo ainda não tem id pra anexar nada antes disso.
+     */
+    public function buscarCnpj(): void
+    {
+        abort_unless($this->canWrite, 403);
+
+        $cnpj = preg_replace('/\D/', '', $this->document);
+
+        if (strlen($cnpj) !== 14) {
+            $this->addError('document', 'Informe um CNPJ válido (14 dígitos) para usar a Busca Básica.');
+
+            return;
+        }
+
+        $this->searchingCnpj = true;
+
+        $response = Http::timeout(15)->get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
+
+        $this->searchingCnpj = false;
+
+        if ($response->failed()) {
+            $this->addError('document', 'Não foi possível consultar o CNPJ agora. Tente novamente em instantes.');
+
+            return;
+        }
+
+        $dados = $response->json();
+
+        $this->name = $dados['razao_social'] ?? $this->name;
+        $this->address_line1 = trim(($dados['logradouro'] ?? '').($dados['numero'] ? ', '.$dados['numero'] : ''));
+        $this->address_line2 = $dados['complemento'] ?? $this->address_line2;
+        $this->district = $dados['bairro'] ?? $this->district;
+        $this->city = $dados['municipio'] ?? $this->city;
+        $this->state = $dados['uf'] ?? $this->state;
+        $this->postal_code = $dados['cep'] ?? $this->postal_code;
+        $this->country = 'Brasil';
+
+        if ($this->phone === '' && ! empty($dados['ddd_telefone_1'])) {
+            $this->phone = $dados['ddd_telefone_1'];
+        }
+        if ($this->email === '' && ! empty($dados['email'])) {
+            $this->email = $dados['email'];
+        }
+
+        $this->lastCnpjLookupPayload = $dados;
+        $this->lastCnpjLookupDocument = $cnpj;
+    }
+
+    private function attachCnpjLookupPdf(Contact $contact): void
+    {
+        $pdf = Pdf::loadView('pdf.contact-cnpj-lookup', ['dados' => $this->lastCnpjLookupPayload]);
+        $bytes = $pdf->output();
+
+        $filename = 'consulta-cnpj-'.now()->format('Ymd-His').'.pdf';
+        $path = "contacts/{$contact->id}/{$filename}";
+
+        Storage::disk('local')->put($path, $bytes);
+
+        $contact->documents()->create([
+            'category' => 'consulta_cnpj',
+            'original_name' => $filename,
+            'stored_path' => $path,
+            'mime_type' => 'application/pdf',
+            'file_size' => strlen($bytes),
         ]);
     }
 
@@ -173,7 +294,7 @@ class Index extends Component
     {
         abort_unless($this->canWrite, 403);
 
-        $contact = Contact::query()->with(['commercialReferences', 'bankReferences', 'bankAccounts'])->findOrFail($id);
+        $contact = Contact::query()->with(['commercialReferences', 'bankReferences', 'bankAccounts', 'documents'])->findOrFail($id);
 
         $this->editingId = $contact->id;
         $this->name = $contact->name;
@@ -183,6 +304,8 @@ class Index extends Component
         $this->email = (string) $contact->email;
         $this->phone = (string) $contact->phone;
         $this->district = (string) $contact->district;
+        $this->address_line1 = (string) $contact->address_line1;
+        $this->address_line2 = (string) $contact->address_line2;
         $this->city = (string) $contact->city;
         $this->state = (string) $contact->state;
         $this->postal_code = (string) $contact->postal_code;
@@ -203,6 +326,9 @@ class Index extends Component
             ->all();
         $this->contactBankAccountRows = $contact->bankAccounts
             ->map(fn ($row) => ['bank' => (string) $row->bank, 'agency' => (string) $row->agency, 'account' => (string) $row->account, 'holder' => (string) $row->holder])
+            ->all();
+        $this->existingDocuments = $contact->documents
+            ->map(fn ($doc) => ['id' => $doc->id, 'original_name' => $doc->original_name, 'category' => $doc->category, 'created_at' => $doc->created_at?->format('d/m/Y H:i')])
             ->all();
         $this->is_supplier = $contact->is_supplier;
         $this->is_customer = $contact->is_customer;
@@ -226,6 +352,8 @@ class Index extends Component
             $data['bankReferenceRows'],
             $data['contactBankAccountRows'],
         );
+
+        $documentDigits = preg_replace('/\D/', '', $data['document'] ?? '');
 
         if ($this->editingId) {
             // Editar e salvar já conta como "revisado" — não precisa de
@@ -261,6 +389,12 @@ class Index extends Component
                 continue;
             }
             $contact->bankAccounts()->create($row);
+        }
+
+        // Se a Busca Básica foi usada pra este mesmo documento, anexa o
+        // PDF da consulta agora que o contato já tem id.
+        if ($this->lastCnpjLookupPayload && $this->lastCnpjLookupDocument === $documentDigits) {
+            $this->attachCnpjLookupPdf($contact);
         }
 
         $this->showForm = false;

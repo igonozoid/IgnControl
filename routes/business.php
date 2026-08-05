@@ -2,6 +2,8 @@
 
 use App\Livewire\Admin\PeriodLock as AdminPeriodLock;
 use App\Livewire\Admin\Users as AdminUsers;
+use App\Http\Controllers\ContactDocumentController;
+use App\Livewire\Admin\Credentials\Index as AdminCredentials;
 use App\Livewire\Categories\Index as CategoriesIndex;
 use App\Livewire\Contacts\Index as ContactsIndex;
 use App\Livewire\CostCenters\Index as CostCentersIndex;
@@ -31,9 +33,11 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/financeiro/lancamentos', FinancialEntriesIndex::class)->name('financial-entries.index');
     Route::get('/financeiro/lancamentos/{financialEntry}/recibo', [FinancialEntryReceiptController::class, 'show'])->name('financial-entries.receipt');
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
+    Route::get('/contatos/documentos/{contactDocument}', [ContactDocumentController::class, 'download'])->name('contacts.documents.download');
     Route::get('/agenda', TasksIndex::class)->name('tasks.index');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
+    Route::get('/admin/credenciais', AdminCredentials::class)->name('admin.credentials.index');
 
     Route::get('/relatorios', ReportsIndex::class)->name('reports.index');
     Route::get('/relatorios/dre', ReportsDre::class)->name('reports.dre');

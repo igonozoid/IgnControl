@@ -80,4 +80,9 @@ class Contact extends Model
     {
         return $this->hasMany(ContactBankAccount::class);
     }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ContactDocument::class);
+    }
 }

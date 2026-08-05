@@ -5,9 +5,12 @@ namespace Tests\Feature;
 use App\Livewire\Contacts\Index;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Credential;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -287,5 +290,122 @@ class ContactsScreenTest extends TestCase
         Livewire::test(Index::class)->call('delete', $contact->id);
 
         $this->assertDatabaseMissing('commercial_references', ['contact_id' => $contact->id]);
+    }
+
+    private function fakeBrasilApiResponse(): array
+    {
+        return [
+            'cnpj' => '11222333000181',
+            'razao_social' => 'Empresa Exemplo LTDA',
+            'nome_fantasia' => 'Exemplo',
+            'descricao_situacao_cadastral' => 'ATIVA',
+            'data_inicio_atividade' => '2010-01-01',
+            'cnae_fiscal_descricao' => 'Comércio varejista',
+            'logradouro' => 'Rua das Flores',
+            'numero' => '123',
+            'complemento' => 'Sala 4',
+            'bairro' => 'Centro',
+            'municipio' => 'Curitiba',
+            'uf' => 'PR',
+            'cep' => '80000000',
+            'ddd_telefone_1' => '4130000000',
+            'email' => 'contato@exemplo.com',
+            'capital_social' => 100000,
+            'porte' => 'DEMAIS',
+        ];
+    }
+
+    public function test_busca_basica_button_only_appears_for_cnpj_document(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('document', '123.456.789-00')
+            ->assertDontSee('Busca Básica');
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('document', '11.222.333/0001-81')
+            ->assertSee('Busca Básica');
+    }
+
+    public function test_buscar_cnpj_fills_fields_from_the_api_response(): void
+    {
+        Http::fake([
+            'https://brasilapi.com.br/api/cnpj/v1/*' => Http::response($this->fakeBrasilApiResponse(), 200),
+        ]);
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('document', '11.222.333/0001-81')
+            ->call('buscarCnpj')
+            ->assertSet('name', 'Empresa Exemplo LTDA')
+            ->assertSet('city', 'Curitiba')
+            ->assertSet('state', 'PR')
+            ->assertSet('postal_code', '80000000')
+            ->assertSet('district', 'Centro');
+    }
+
+    public function test_buscar_cnpj_then_save_attaches_a_pdf_document(): void
+    {
+        Storage::fake('local');
+        Http::fake([
+            'https://brasilapi.com.br/api/cnpj/v1/*' => Http::response($this->fakeBrasilApiResponse(), 200),
+        ]);
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('document', '11.222.333/0001-81')
+            ->call('buscarCnpj')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Empresa Exemplo LTDA')->firstOrFail();
+
+        $this->assertDatabaseHas('contact_documents', [
+            'contact_id' => $contact->id,
+            'category' => 'consulta_cnpj',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $document = $contact->documents()->first();
+        Storage::disk('local')->assertExists($document->stored_path);
+    }
+
+    public function test_busca_avancada_link_only_appears_when_a_credential_has_a_url(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        Permission::query()->create([
+            'company_id' => $company->id,
+            'user_id' => $user->id,
+            'module' => 'credentials',
+            'level' => 'read',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->assertDontSee('Busca Avançada');
+
+        Credential::factory()->create([
+            'company_id' => $company->id,
+            'title' => 'SPC Brasil',
+            'url' => 'https://www.spcbrasil.org.br/login',
+        ]);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->assertSee('Busca Avançada — SPC Brasil');
     }
 }
