@@ -75,6 +75,30 @@
                     @error('district') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
             </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Cidade</label>
+                    <input type="text" wire:model="city" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('city') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Estado</label>
+                    <input type="text" wire:model="state" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('state') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">CEP</label>
+                    <input type="text" wire:model="postal_code" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('postal_code') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">País</label>
+                    <input type="text" wire:model="country" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('country') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+            </div>
 
             <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300 mb-1">Papéis</label>
@@ -84,6 +108,115 @@
                     <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_employee" class="dark:bg-neutral-700 dark:border-neutral-600"> Funcionário</label>
                     <label class="flex items-center gap-1.5"><input type="checkbox" wire:model="is_other" class="dark:bg-neutral-700 dark:border-neutral-600"> Outro</label>
                 </div>
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-neutral-700 pt-3">
+                <p class="font-semibold text-gray-700 dark:text-neutral-300 mb-2">Crédito</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Frequência de compra</label>
+                        <input type="text" wire:model="purchase_frequency" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Classificação</label>
+                        <input type="text" wire:model="classification" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mt-3">
+                    <div>
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Limite de crédito</label>
+                        <input type="number" step="0.01" min="0" wire:model="credit_limit" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        @error('credit_limit') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Nome da mãe</label>
+                        <input type="text" wire:model="mother_name" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <p class="text-gray-500 dark:text-neutral-400 mt-1">Usado em consulta de crédito de pessoa física.</p>
+                    </div>
+                </div>
+
+                <label class="mt-3 flex items-center gap-1.5 text-gray-700 dark:text-neutral-300">
+                    <input type="checkbox" wire:model.live="credit_checked" class="rounded dark:bg-neutral-700 dark:border-neutral-600">
+                    Crédito consultado
+                </label>
+                @if ($credit_checked)
+                    <div class="mt-2">
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Data da consulta</label>
+                        <input type="date" wire:model="credit_check_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        @error('credit_check_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    </div>
+                @endif
+
+                <label class="mt-3 flex items-center gap-1.5 text-gray-700 dark:text-neutral-300">
+                    <input type="checkbox" wire:model.live="has_credit_issue" class="rounded dark:bg-neutral-700 dark:border-neutral-600">
+                    Possui pendência de crédito
+                </label>
+                @if ($has_credit_issue)
+                    <div class="mt-2">
+                        <label class="block font-medium text-gray-700 dark:text-neutral-300">Local da pendência</label>
+                        <input type="text" wire:model="credit_issue_location" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        @error('credit_issue_location') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                    </div>
+                @endif
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-neutral-700 pt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-semibold text-gray-700 dark:text-neutral-300">Referências comerciais</p>
+                    <button type="button" wire:click="addCommercialReferenceRow" class="text-green-600 dark:text-green-400 hover:text-green-800">+ adicionar</button>
+                </div>
+                @foreach ($commercialReferenceRows as $i => $row)
+                    <div wire:key="commercial-ref-{{ $i }}" class="flex gap-2 items-start mb-2">
+                        <input type="text" placeholder="Nome" wire:model="commercialReferenceRows.{{ $i }}.name" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <input type="text" placeholder="Telefone" wire:model="commercialReferenceRows.{{ $i }}.phone" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <button type="button" wire:click="removeCommercialReferenceRow({{ $i }})" title="Remover" class="shrink-0 text-red-600 dark:text-red-400 hover:text-red-800 mt-1"><x-icon name="trash" /></button>
+                    </div>
+                @endforeach
+                @if (empty($commercialReferenceRows))
+                    <p class="text-gray-400 dark:text-neutral-500">Nenhuma referência adicionada.</p>
+                @endif
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-neutral-700 pt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-semibold text-gray-700 dark:text-neutral-300">Referências bancárias</p>
+                    <button type="button" wire:click="addBankReferenceRow" class="text-green-600 dark:text-green-400 hover:text-green-800">+ adicionar</button>
+                </div>
+                @foreach ($bankReferenceRows as $i => $row)
+                    <div wire:key="bank-ref-{{ $i }}" class="grid grid-cols-4 gap-2 items-start mb-2">
+                        <input type="text" placeholder="Banco" wire:model="bankReferenceRows.{{ $i }}.bank" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <input type="text" placeholder="Agência" wire:model="bankReferenceRows.{{ $i }}.agency" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <input type="text" placeholder="Conta" wire:model="bankReferenceRows.{{ $i }}.account" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="Telefone" wire:model="bankReferenceRows.{{ $i }}.phone" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                            <button type="button" wire:click="removeBankReferenceRow({{ $i }})" title="Remover" class="shrink-0 text-red-600 dark:text-red-400 hover:text-red-800 mt-1"><x-icon name="trash" /></button>
+                        </div>
+                    </div>
+                @endforeach
+                @if (empty($bankReferenceRows))
+                    <p class="text-gray-400 dark:text-neutral-500">Nenhuma referência adicionada.</p>
+                @endif
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-neutral-700 pt-3">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="font-semibold text-gray-700 dark:text-neutral-300">Contas bancárias do contato</p>
+                    <button type="button" wire:click="addContactBankAccountRow" class="text-green-600 dark:text-green-400 hover:text-green-800">+ adicionar</button>
+                </div>
+                @foreach ($contactBankAccountRows as $i => $row)
+                    <div wire:key="bank-account-{{ $i }}" class="grid grid-cols-4 gap-2 items-start mb-2">
+                        <input type="text" placeholder="Banco" wire:model="contactBankAccountRows.{{ $i }}.bank" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <input type="text" placeholder="Agência" wire:model="contactBankAccountRows.{{ $i }}.agency" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <input type="text" placeholder="Conta" wire:model="contactBankAccountRows.{{ $i }}.account" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        <div class="flex gap-2">
+                            <input type="text" placeholder="Titular" wire:model="contactBankAccountRows.{{ $i }}.holder" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                            <button type="button" wire:click="removeContactBankAccountRow({{ $i }})" title="Remover" class="shrink-0 text-red-600 dark:text-red-400 hover:text-red-800 mt-1"><x-icon name="trash" /></button>
+                        </div>
+                    </div>
+                @endforeach
+                @if (empty($contactBankAccountRows))
+                    <p class="text-gray-400 dark:text-neutral-500">Nenhuma conta adicionada.</p>
+                @endif
             </div>
 
             <div>

@@ -37,6 +37,14 @@ class Contact extends Model
         'other_role_label',
         'is_active',
         'needs_review',
+        'purchase_frequency',
+        'classification',
+        'credit_limit',
+        'credit_checked',
+        'credit_check_date',
+        'has_credit_issue',
+        'credit_issue_location',
+        'mother_name',
     ];
 
     protected $casts = [
@@ -47,10 +55,29 @@ class Contact extends Model
         'is_other' => 'boolean',
         'is_active' => 'boolean',
         'needs_review' => 'boolean',
+        'credit_limit' => 'decimal:2',
+        'credit_checked' => 'boolean',
+        'credit_check_date' => 'date:Y-m-d',
+        'has_credit_issue' => 'boolean',
     ];
 
     public function financialEntries(): HasMany
     {
         return $this->hasMany(FinancialEntry::class);
+    }
+
+    public function commercialReferences(): HasMany
+    {
+        return $this->hasMany(CommercialReference::class);
+    }
+
+    public function bankReferences(): HasMany
+    {
+        return $this->hasMany(BankReference::class);
+    }
+
+    public function bankAccounts(): HasMany
+    {
+        return $this->hasMany(ContactBankAccount::class);
     }
 }

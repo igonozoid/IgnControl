@@ -116,4 +116,176 @@ class ContactsScreenTest extends TestCase
 
         $this->assertNull($contact->birth_date);
     }
+
+    public function test_full_access_user_can_save_full_address(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Endereço Completo')
+            ->set('city', 'Curitiba')
+            ->set('state', 'PR')
+            ->set('postal_code', '80000-000')
+            ->set('country', 'Brasil')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Endereço Completo')->firstOrFail();
+
+        $this->assertSame('Curitiba', $contact->city);
+        $this->assertSame('PR', $contact->state);
+        $this->assertSame('80000-000', $contact->postal_code);
+        $this->assertSame('Brasil', $contact->country);
+    }
+
+    public function test_full_access_user_can_save_credit_profile(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Com Crédito')
+            ->set('purchase_frequency', 'Mensal')
+            ->set('classification', 'A')
+            ->set('credit_limit', '5000.50')
+            ->set('credit_checked', true)
+            ->set('credit_check_date', '2026-01-10')
+            ->set('has_credit_issue', true)
+            ->set('credit_issue_location', 'SPC')
+            ->set('mother_name', 'Maria da Silva')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Com Crédito')->firstOrFail();
+
+        $this->assertSame('Mensal', $contact->purchase_frequency);
+        $this->assertSame('A', $contact->classification);
+        $this->assertSame('5000.50', $contact->credit_limit);
+        $this->assertTrue($contact->credit_checked);
+        $this->assertSame('2026-01-10', $contact->credit_check_date->toDateString());
+        $this->assertTrue($contact->has_credit_issue);
+        $this->assertSame('SPC', $contact->credit_issue_location);
+        $this->assertSame('Maria da Silva', $contact->mother_name);
+    }
+
+    public function test_credit_check_date_is_required_when_credit_checked_is_true(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Sem Data')
+            ->set('credit_checked', true)
+            ->call('save')
+            ->assertHasErrors(['credit_check_date']);
+    }
+
+    public function test_credit_issue_location_is_required_when_has_credit_issue_is_true(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Sem Local')
+            ->set('has_credit_issue', true)
+            ->call('save')
+            ->assertHasErrors(['credit_issue_location']);
+    }
+
+    public function test_full_access_user_can_add_commercial_and_bank_references(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Com Referências')
+            ->call('addCommercialReferenceRow')
+            ->set('commercialReferenceRows.0.name', 'Fornecedor Amigo')
+            ->set('commercialReferenceRows.0.phone', '11999990000')
+            ->call('addBankReferenceRow')
+            ->set('bankReferenceRows.0.bank', 'Banco X')
+            ->set('bankReferenceRows.0.agency', '0001')
+            ->set('bankReferenceRows.0.account', '12345-6')
+            ->call('addContactBankAccountRow')
+            ->set('contactBankAccountRows.0.bank', 'Banco Y')
+            ->set('contactBankAccountRows.0.holder', 'Cliente Com Referências')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Com Referências')->firstOrFail();
+
+        $this->assertDatabaseHas('commercial_references', [
+            'contact_id' => $contact->id,
+            'name' => 'Fornecedor Amigo',
+            'phone' => '11999990000',
+        ]);
+        $this->assertDatabaseHas('bank_references', [
+            'contact_id' => $contact->id,
+            'bank' => 'Banco X',
+            'agency' => '0001',
+            'account' => '12345-6',
+        ]);
+        $this->assertDatabaseHas('contact_bank_accounts', [
+            'contact_id' => $contact->id,
+            'bank' => 'Banco Y',
+            'holder' => 'Cliente Com Referências',
+        ]);
+    }
+
+    public function test_removing_a_reference_row_before_saving_does_not_persist_it(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Removeu Referência')
+            ->call('addCommercialReferenceRow')
+            ->set('commercialReferenceRows.0.name', 'Vai Sair')
+            ->call('addCommercialReferenceRow')
+            ->set('commercialReferenceRows.1.name', 'Vai Ficar')
+            ->call('removeCommercialReferenceRow', 0)
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Removeu Referência')->firstOrFail();
+
+        $this->assertDatabaseMissing('commercial_references', ['contact_id' => $contact->id, 'name' => 'Vai Sair']);
+        $this->assertDatabaseHas('commercial_references', ['contact_id' => $contact->id, 'name' => 'Vai Ficar']);
+    }
+
+    public function test_editing_a_contact_loads_its_existing_reference_rows(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $contact = Contact::factory()->create(['company_id' => $company->id, 'name' => 'Cliente Existente']);
+        $contact->commercialReferences()->create(['company_id' => $company->id, 'name' => 'Ref Existente', 'phone' => '4130000000']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('edit', $contact->id)
+            ->assertSet('commercialReferenceRows.0.name', 'Ref Existente')
+            ->assertSet('commercialReferenceRows.0.phone', '4130000000');
+    }
+
+    public function test_deleting_a_contact_removes_its_references_too(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $contact = Contact::factory()->create(['company_id' => $company->id]);
+        $contact->commercialReferences()->create(['company_id' => $company->id, 'name' => 'Ref', 'phone' => '1']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->call('delete', $contact->id);
+
+        $this->assertDatabaseMissing('commercial_references', ['contact_id' => $contact->id]);
+    }
 }
