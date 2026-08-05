@@ -21,6 +21,8 @@ class Index extends Component
     #[Url]
     public string $filterType = '';
     #[Url]
+    public string $filterStatus = '';
+    #[Url]
     public bool $onlyNeedsReview = false;
 
     public bool $showForm = false;
@@ -38,6 +40,9 @@ class Index extends Component
     #[Validate('nullable|in:01 RECEITA BRUTA,02 DEDUCOES DA RECEITA,03 CUSTOS DOS SERVICOS/VENDAS,04 DESPESAS OPERACIONAIS,05 RESULTADO FINANCEIRO,06 OUTRAS RECEITAS/DESPESAS')]
     public string $dre_group = '';
 
+    #[Validate('boolean')]
+    public bool $is_active = true;
+
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('financial', 'read'), 403);
@@ -53,6 +58,7 @@ class Index extends Component
         abort_unless($this->canWrite, 403);
         $this->reset(['name', 'type', 'parent_id', 'dre_group', 'editingId']);
         $this->type = 'expense';
+        $this->is_active = true;
         $this->showForm = true;
     }
 
@@ -67,6 +73,7 @@ class Index extends Component
         $this->type = $category->type;
         $this->parent_id = $category->parent_id;
         $this->dre_group = (string) $category->dre_group;
+        $this->is_active = $category->is_active;
         $this->showForm = true;
     }
 
@@ -104,6 +111,7 @@ class Index extends Component
     {
         $this->showForm = false;
         $this->reset(['name', 'type', 'parent_id', 'dre_group', 'editingId']);
+        $this->is_active = true;
     }
 
     public function render()
@@ -111,6 +119,7 @@ class Index extends Component
         $categories = Category::query()
             ->when($this->search !== '', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
             ->when($this->filterType !== '', fn ($q) => $q->where('type', $this->filterType))
+            ->when($this->filterStatus !== '', fn ($q) => $q->where('is_active', $this->filterStatus === 'active'))
             ->when($this->onlyNeedsReview, fn ($q) => $q->where('needs_review', true))
             ->orderBy('type')
             ->orderBy('name')

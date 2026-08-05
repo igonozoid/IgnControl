@@ -10,7 +10,7 @@
     </div>
 
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Buscar por nome</label>
                 <input type="text" wire:model.live.debounce.400ms="search" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100" placeholder="Digite pra buscar...">
@@ -21,6 +21,14 @@
                     <option value="">Todos</option>
                     <option value="income">Receita</option>
                     <option value="expense">Despesa</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Situação</label>
+                <select wire:model.live="filterStatus" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
+                    <option value="">Todos</option>
+                    <option value="active">Ativas</option>
+                    <option value="inactive">Inativas</option>
                 </select>
             </div>
         </div>
@@ -74,6 +82,11 @@
                 @error('dre_group') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
 
+            <div class="flex items-center gap-2">
+                <input type="checkbox" wire:model="is_active" id="is_active" class="rounded border-gray-300 dark:border-neutral-600 text-green-600">
+                <label for="is_active" class="text-gray-700 dark:text-neutral-300">Ativa</label>
+            </div>
+
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700">
                     <x-icon name="check" />
@@ -94,6 +107,7 @@
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Nome</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Tipo</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Categoria pai</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase">Situação</th>
                     @if ($this->canWrite)
                         <th class="px-4 py-2"></th>
                     @endif
@@ -110,6 +124,13 @@
                         </td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $category->type === 'income' ? 'Receita' : 'Despesa' }}</td>
                         <td class="px-4 py-2 text-xs text-gray-500 dark:text-neutral-400">{{ $category->parent?->name ?? '—' }}</td>
+                        <td class="px-4 py-2 text-xs">
+                            @if ($category->is_active)
+                                <span class="text-[#15803d] dark:text-[#86efac]">Ativa</span>
+                            @else
+                                <span class="text-gray-400 dark:text-neutral-500">Inativa</span>
+                            @endif
+                        </td>
                         @if ($this->canWrite)
                             <td class="px-4 py-2 text-right text-xs space-x-2 whitespace-nowrap">
                                 @if ($category->needs_review)
@@ -122,7 +143,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-6 text-center text-xs text-gray-500 dark:text-neutral-400">Nenhuma categoria cadastrada ainda.</td>
+                        <td colspan="5" class="px-4 py-6 text-center text-xs text-gray-500 dark:text-neutral-400">Nenhuma categoria cadastrada ainda.</td>
                     </tr>
                 @endforelse
             </tbody>

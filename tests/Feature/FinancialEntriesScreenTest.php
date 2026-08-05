@@ -276,6 +276,59 @@ class FinancialEntriesScreenTest extends TestCase
         $this->assertStringContainsString('(3/3)', $entries[2]->description);
     }
 
+    public function test_filter_by_movement_date_finds_entry_due_in_a_different_month(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'description' => 'Serviço de janeiro',
+            'movement_date' => '2026-01-20',
+            'due_date' => '2026-02-15',
+        ]);
+        $this->actingAs($user);
+
+        // Filtrando por vencimento (padrão), janeiro não deveria achar nada.
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('month', '1')->set('year', '2026')
+            ->assertDontSee('Serviço de janeiro');
+
+        // Filtrando por competência, aparece em janeiro.
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('filterDateType', 'movement')
+            ->set('month', '1')->set('year', '2026')
+            ->assertSee('Serviço de janeiro');
+    }
+
+    public function test_filter_by_both_dates_finds_entry_matching_either_one(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'description' => 'Serviço de janeiro',
+            'movement_date' => '2026-01-20',
+            'due_date' => '2026-02-15',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('filterDateType', 'both')
+            ->set('month', '2')->set('year', '2026')
+            ->assertSee('Serviço de janeiro');
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('filterDateType', 'both')
+            ->set('month', '1')->set('year', '2026')
+            ->assertSee('Serviço de janeiro');
+    }
+
     public function test_installments_are_not_offered_when_editing_an_existing_entry(): void
     {
         $company = Company::factory()->create();

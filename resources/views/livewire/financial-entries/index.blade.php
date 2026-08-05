@@ -26,10 +26,13 @@
         </nav>
     </div>
 
-    {{-- Barra de filtros --}}
+    {{-- Barra de filtros — mesmo conjunto compacto do sistema legado
+         (Mês/Ano/Tipo de data/Situação/Conta/Busca, tudo em 1 linha).
+         Categoria e Contato, que o legado não tinha na barra rápida,
+         ficam num "mais filtros" à parte pra não estourar a linha. --}}
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div>
+        <div class="flex flex-wrap items-end gap-2">
+            <div class="w-20">
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Mês</label>
                 <select wire:model.live="month" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                     <option value="">Todos</option>
@@ -38,7 +41,7 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div class="w-24">
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Ano</label>
                 <select wire:model.live="year" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                     <option value="">Todos</option>
@@ -47,7 +50,15 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div class="w-44">
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Tipo de data</label>
+                <select wire:model.live="filterDateType" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
+                    <option value="due">Vencimento/pagamento</option>
+                    <option value="movement">Competência</option>
+                    <option value="both">Vencimento ou competência</option>
+                </select>
+            </div>
+            <div class="w-36">
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Situação</label>
                 <select wire:model.live="status" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                     <option value="all">Todas</option>
@@ -55,7 +66,7 @@
                     <option value="paid">Pago</option>
                 </select>
             </div>
-            <div>
+            <div class="w-40">
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Conta</label>
                 <select wire:model.live="filterAccountId" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                     <option value="">Todas as contas</option>
@@ -64,8 +75,26 @@
                     @endforeach
                 </select>
             </div>
+            <div class="flex-1 min-w-[160px]">
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Buscar (descrição/contato)</label>
+                <input type="text" wire:model.live.debounce.400ms="search" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100" placeholder="Digite pra buscar...">
+            </div>
             @if ($tab !== 'transfer')
                 <div>
+                    <button type="button" wire:click="$toggle('showMoreFilters')" class="mt-1 flex items-center gap-1 px-2 py-1.5 rounded-md text-xs text-gray-600 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700">
+                        <x-icon name="filter" class="w-3.5 h-3.5" />
+                        Mais filtros
+                        @if ($filterCategoryId || $filterContactId)
+                            <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-green-600 text-white text-[10px]">{{ ($filterCategoryId ? 1 : 0) + ($filterContactId ? 1 : 0) }}</span>
+                        @endif
+                    </button>
+                </div>
+            @endif
+        </div>
+
+        @if ($tab !== 'transfer' && $showMoreFilters)
+            <div class="flex flex-wrap items-end gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700">
+                <div class="w-56">
                     <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Categoria</label>
                     <select wire:model.live="filterCategoryId" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                         <option value="">Todas</option>
@@ -74,7 +103,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div>
+                <div class="w-56">
                     <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Contato</label>
                     <select wire:model.live="filterContactId" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                         <option value="">Todos</option>
@@ -83,12 +112,8 @@
                         @endforeach
                     </select>
                 </div>
-            @endif
-            <div class="col-span-2 sm:col-span-3 lg:col-span-2">
-                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Buscar (descrição/contato)</label>
-                <input type="text" wire:model.live.debounce.400ms="search" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100" placeholder="Digite pra buscar...">
             </div>
-        </div>
+        @endif
     </div>
 
     {{-- Resumo --}}

@@ -41,6 +41,11 @@ class Index extends Component
     public string $year = '';
     #[Url]
     public string $status = 'all'; // all | pending | paid
+    // Qual data o filtro de mês/ano considera — mesma ideia do "Filtrar
+    // por data de mov./vcto./ambas" do sistema legado: vencimento é o que
+    // a maioria usa no dia a dia, competência é o que interessa pro DRE.
+    #[Url]
+    public string $filterDateType = 'due'; // due | movement | both
     #[Url]
     public ?int $filterAccountId = null;
     #[Url]
@@ -51,6 +56,9 @@ class Index extends Component
     public ?int $filterContactId = null;
     #[Url]
     public string $search = '';
+    // Categoria/Contato ficam escondidos por padrão — o legado não tinha
+    // esses dois na barra rápida, só os campos acima.
+    public bool $showMoreFilters = false;
 
     // Formulário
     public bool $showForm = false;
@@ -411,10 +419,26 @@ class Index extends Component
             ->with(['financialAccount', 'destinationAccount', 'contact', 'category', 'costCenter'])
             ->where('type', $this->tab);
 
-        if ($this->month !== '' && $this->year !== '') {
-            $query->whereYear('due_date', $this->year)->whereMonth('due_date', $this->month);
-        } elseif ($this->year !== '') {
-            $query->whereYear('due_date', $this->year);
+        if ($this->month !== '' || $this->year !== '') {
+            $columns = match ($this->filterDateType) {
+                'movement' => ['movement_date'],
+                'both' => ['due_date', 'movement_date'],
+                default => ['due_date'],
+            };
+
+            $query->where(function ($q) use ($columns) {
+                foreach ($columns as $column) {
+                    $q->orWhere(function ($sub) use ($column) {
+                        if ($this->month !== '' && $this->year !== '') {
+                            $sub->whereYear($column, $this->year)->whereMonth($column, $this->month);
+                        } elseif ($this->year !== '') {
+                            $sub->whereYear($column, $this->year);
+                        } elseif ($this->month !== '') {
+                            $sub->whereMonth($column, $this->month);
+                        }
+                    });
+                }
+            });
         }
 
         if ($this->status === 'pending') {
@@ -456,13 +480,27 @@ class Index extends Component
     {
         $entries = $this->baseQuery()->paginate(20);
 
+        // Cadastro inativo continua valendo pro que já foi lançado (não
+        // some da listagem nem quebra edição), mas não aparece como opção
+        // pra um lançamento novo — por isso o orWhere pelo id já
+        // selecionado no formulário.
         return view('livewire.financial-entries.index', [
             'entries' => $entries,
             'totalPending' => $this->baseQuery()->where('status', 'pending')->sum('amount'),
             'totalPaid' => $this->baseQuery()->where('status', 'paid')->sum('amount'),
-            'accounts' => FinancialAccount::query()->orderBy('name')->get(),
-            'categories' => Category::query()->where('type', $this->tab === 'income' ? 'income' : 'expense')->orderBy('name')->get(),
-            'costCenters' => CostCenter::query()->orderBy('name')->get(),
+            'accounts' => FinancialAccount::query()
+                ->where(fn ($q) => $q->where('is_active', true)
+                    ->orWhereIn('id', array_filter([$this->financial_account_id, $this->destination_account_id, $this->filterAccountId])))
+                ->orderBy('name')->get(),
+            'categories' => Category::query()
+                ->where('type', $this->tab === 'income' ? 'income' : 'expense')
+                ->where(fn ($q) => $q->where('is_active', true)
+                    ->orWhereIn('id', array_filter([$this->category_id, $this->filterCategoryId])))
+                ->orderBy('name')->get(),
+            'costCenters' => CostCenter::query()
+                ->where(fn ($q) => $q->where('is_active', true)
+                    ->orWhereIn('id', array_filter([$this->cost_center_id, $this->filterCostCenterId])))
+                ->orderBy('name')->get(),
             'contacts' => Contact::query()->orderBy('name')->get(),
             'currencies' => Currency::query()->orderBy('code')->get(),
         ]);
