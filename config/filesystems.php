@@ -47,6 +47,17 @@ return [
             'report' => false,
         ],
 
+        // Destino dos backups (banco + documentos anexados). Fica fora de
+        // "app/private" de propósito: se o backup fosse gravado dentro da
+        // pasta que ele mesmo copia, cada rodada incluiria os zips das
+        // rodadas anteriores dentro do próximo zip.
+        'backups' => [
+            'driver' => 'local',
+            'root' => env('BACKUP_DISK_PATH', storage_path('app/backups')),
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
