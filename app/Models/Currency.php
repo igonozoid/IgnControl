@@ -18,6 +18,13 @@ class Currency extends Model
         'code',
         'name',
         'symbol',
+        'decimals',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'decimals' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     public function exchangeRates(): HasMany

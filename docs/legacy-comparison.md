@@ -50,12 +50,11 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
 
 ## Moedas
 
-- **Tela de cadastro de moedas** (Média/Alta, se algum dia vocês
-  transacionarem em outra moeda além de R$). Hoje moeda só existe via
-  seed/migração — não tem tela nenhuma pra cadastrar uma moeda nova,
-  editar símbolo/nome, ou definir nº de casas decimais. Se sempre for só
-  BRL, não faz falta; se em algum momento entrar USD/EUR (ex: com o
-  Marco, que é family office e pode ter ativos no exterior), vale criar.
+- ~~**Tela de cadastro de moedas**~~ — feito. Menu Financeiro > Moedas:
+  código (ISO 4217, travado depois de criado), nome, símbolo, casas
+  decimais e ativa/inativa. Excluir uma moeda em uso por alguma conta
+  financeira é bloqueado (mesma trava de chave estrangeira que já
+  existia) — a orientação nesse caso é marcar como inativa.
 
 ## Contatos
 

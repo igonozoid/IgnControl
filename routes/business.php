@@ -10,6 +10,7 @@ use App\Livewire\Categories\Index as CategoriesIndex;
 use App\Livewire\Contacts\Form as ContactsForm;
 use App\Livewire\Contacts\Index as ContactsIndex;
 use App\Livewire\CostCenters\Index as CostCentersIndex;
+use App\Livewire\Currencies\Index as CurrenciesIndex;
 use App\Livewire\FinancialAccounts\Index as FinancialAccountsIndex;
 use App\Http\Controllers\FinancialEntryReceiptController;
 use App\Livewire\FinancialEntries\Index as FinancialEntriesIndex;
@@ -35,6 +36,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/financeiro/contas', FinancialAccountsIndex::class)->name('financial-accounts.index');
     Route::get('/financeiro/categorias', CategoriesIndex::class)->name('categories.index');
     Route::get('/financeiro/centros-de-custo', CostCentersIndex::class)->name('cost-centers.index');
+    Route::get('/financeiro/moedas', CurrenciesIndex::class)->name('currencies.index');
     Route::get('/financeiro/lancamentos', FinancialEntriesIndex::class)->name('financial-entries.index');
     Route::get('/financeiro/lancamentos/{financialEntry}/recibo', [FinancialEntryReceiptController::class, 'show'])->name('financial-entries.receipt');
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
