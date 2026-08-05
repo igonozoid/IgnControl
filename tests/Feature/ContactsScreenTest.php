@@ -368,6 +368,86 @@ class ContactsScreenTest extends TestCase
             ->assertSee('Busca Básica');
     }
 
+    public function test_department_contacts_section_only_appears_for_a_legal_entity(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->set('tab', 'references')
+            ->set('document_type', 'individual')
+            ->assertDontSee('Contatos de departamento');
+
+        Livewire::test(Form::class)
+            ->set('tab', 'references')
+            ->set('document_type', 'company')
+            ->assertSee('Contatos de departamento');
+    }
+
+    public function test_full_access_user_can_add_department_contacts(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->set('name', 'Empresa Grande LTDA')
+            ->set('document_type', 'company')
+            ->call('addDepartmentContactRow')
+            ->set('departmentContactRows.0.name', 'Ana Compras')
+            ->set('departmentContactRows.0.role', 'Comprador')
+            ->set('departmentContactRows.0.extension', '1234')
+            ->set('departmentContactRows.0.email', 'ana@empresagrande.com')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Empresa Grande LTDA')->firstOrFail();
+
+        $this->assertDatabaseHas('contact_department_contacts', [
+            'contact_id' => $contact->id,
+            'name' => 'Ana Compras',
+            'role' => 'Comprador',
+            'extension' => '1234',
+            'email' => 'ana@empresagrande.com',
+        ]);
+    }
+
+    public function test_editing_a_contact_loads_its_existing_department_contacts(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $contact = Contact::factory()->create(['company_id' => $company->id, 'document_type' => 'company']);
+        $contact->departmentContacts()->create([
+            'company_id' => $company->id,
+            'name' => 'Bruno Financeiro',
+            'role' => 'Analista',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Form::class, ['contact' => $contact])
+            ->assertSet('departmentContactRows.0.name', 'Bruno Financeiro')
+            ->assertSet('departmentContactRows.0.role', 'Analista');
+    }
+
+    public function test_removing_a_department_contact_row_before_saving_does_not_persist_it(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->set('name', 'Sem Departamento')
+            ->set('document_type', 'company')
+            ->call('addDepartmentContactRow')
+            ->set('departmentContactRows.0.name', 'Vai ser removido')
+            ->call('removeDepartmentContactRow', 0)
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Sem Departamento')->firstOrFail();
+
+        $this->assertSame(0, $contact->departmentContacts()->count());
+    }
+
     public function test_buscar_cnpj_fills_fields_from_the_api_response(): void
     {
         Http::fake([

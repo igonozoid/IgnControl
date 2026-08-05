@@ -69,10 +69,11 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
 - **"Data importante"** (Baixa) — um campo de lembrete de data além do
   aniversário (ex: aniversário de fundação da empresa-cliente). Hoje só
   temos `birth_date`.
-- **Contatos de departamento** (Baixa/Média) — pra contato jurídico, uma
-  sublista de pessoas de contato dentro daquela empresa (nome, cargo,
-  ramal, e-mail). Não existe hoje; pode ser útil se vocês lidam com
-  empresas grandes onde o contato "físico" muda por área.
+- ~~**Contatos de departamento**~~ — feito. Na aba Referências, só para
+  pessoa jurídica: sublista de pessoas de contato dentro da empresa
+  (nome, cargo, ramal, e-mail), mesmo padrão de lista simples das
+  referências comerciais/bancárias (recriada por completo a cada
+  "Salvar").
 - Os campos ligados a vínculo empregatício que existiam dentro do próprio
   ContactDialog do legado (CTPS, data de admissão/demissão, tipo de
   vínculo) já foram cobertos — de forma mais completa, inclusive — pelo

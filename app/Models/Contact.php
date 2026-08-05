@@ -83,6 +83,11 @@ class Contact extends Model
         return $this->hasMany(ContactBankAccount::class);
     }
 
+    public function departmentContacts(): HasMany
+    {
+        return $this->hasMany(ContactDepartmentContact::class);
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(ContactDocument::class);

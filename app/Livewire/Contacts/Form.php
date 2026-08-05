@@ -113,6 +113,12 @@ class Form extends Component
     public array $bankReferenceRows = [];
     public array $contactBankAccountRows = [];
 
+    // Contatos de departamento — só faz sentido pra pessoa jurídica
+    // (a view só mostra a seção quando document_type === 'company'),
+    // mas guardamos como qualquer outra lista simples, recriada por
+    // completo a cada "Salvar".
+    public array $departmentContactRows = [];
+
     // Busca Básica (CNPJ): guarda o resultado da última consulta pra
     // anexar o PDF só no momento do "Salvar" — se o contato ainda não
     // existe (cadastro novo), não tem em quem anexar antes disso.
@@ -145,7 +151,7 @@ class Form extends Component
         if ($contact && $contact->exists) {
             abort_unless($this->canWrite, 403);
 
-            $contact->load(['commercialReferences', 'bankReferences', 'bankAccounts', 'documents']);
+            $contact->load(['commercialReferences', 'bankReferences', 'bankAccounts', 'documents', 'departmentContacts']);
             $this->contact = $contact;
 
             $this->name = $contact->name;
@@ -179,6 +185,9 @@ class Form extends Component
                 ->all();
             $this->contactBankAccountRows = $contact->bankAccounts
                 ->map(fn ($row) => ['bank' => (string) $row->bank, 'agency' => (string) $row->agency, 'account' => (string) $row->account, 'holder' => (string) $row->holder])
+                ->all();
+            $this->departmentContactRows = $contact->departmentContacts
+                ->map(fn ($row) => ['name' => (string) $row->name, 'role' => (string) $row->role, 'extension' => (string) $row->extension, 'email' => (string) $row->email])
                 ->all();
             $this->existingDocuments = $contact->documents
                 ->map(fn ($doc) => ['id' => $doc->id, 'original_name' => $doc->original_name, 'category' => $doc->category, 'created_at' => $doc->created_at?->format('d/m/Y H:i')])
@@ -351,6 +360,17 @@ class Form extends Component
         $this->contactBankAccountRows = array_values($this->contactBankAccountRows);
     }
 
+    public function addDepartmentContactRow(): void
+    {
+        $this->departmentContactRows[] = ['name' => '', 'role' => '', 'extension' => '', 'email' => ''];
+    }
+
+    public function removeDepartmentContactRow(int $index): void
+    {
+        unset($this->departmentContactRows[$index]);
+        $this->departmentContactRows = array_values($this->departmentContactRows);
+    }
+
     public function save(): void
     {
         abort_unless($this->canWrite, 403);
@@ -364,6 +384,7 @@ class Form extends Component
             $data['commercialReferenceRows'],
             $data['bankReferenceRows'],
             $data['contactBankAccountRows'],
+            $data['departmentContactRows'],
         );
 
         $documentDigits = preg_replace('/\D/', '', $data['document'] ?? '');
@@ -402,6 +423,14 @@ class Form extends Component
                 continue;
             }
             $contact->bankAccounts()->create($row);
+        }
+
+        $contact->departmentContacts()->delete();
+        foreach ($this->departmentContactRows as $row) {
+            if (collect($row)->filter()->isEmpty()) {
+                continue;
+            }
+            $contact->departmentContacts()->create($row);
         }
 
         // Se a Busca Básica foi usada pra este mesmo documento, anexa o
