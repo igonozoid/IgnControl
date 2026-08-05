@@ -19,7 +19,7 @@ new class extends Component
 <aside
     x-cloak
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-    class="fixed inset-y-0 left-0 z-40 w-60 bg-white dark:bg-neutral-800 border-r border-gray-100 dark:border-neutral-700 flex flex-col transition-transform duration-200 ease-in-out lg:static lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-40 w-60 h-screen bg-white dark:bg-neutral-800 border-r border-gray-100 dark:border-neutral-700 flex flex-col transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 shrink-0"
 >
     <!-- Logo -->
     <div class="h-14 flex items-center px-5 border-b border-gray-100 dark:border-neutral-700 shrink-0">

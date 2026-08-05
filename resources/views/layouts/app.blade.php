@@ -35,11 +35,19 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen flex bg-gray-100 dark:bg-neutral-900" x-data="{ sidebarOpen: false }">
+        {{--
+            h-screen + overflow-hidden aqui é o que trava a altura da tela
+            toda no viewport — sem isso, a página cresce conforme o
+            conteúdo e o menu lateral (que troca pra "static" no flow
+            normal em telas grandes) esticava junto até a altura do
+            conteúdo, em vez de ficar travado na altura da tela e rolar
+            por conta própria.
+        --}}
+        <div class="h-screen overflow-hidden flex bg-gray-100 dark:bg-neutral-900" x-data="{ sidebarOpen: false }">
             <livewire:layout.navigation />
 
-            <!-- Conteúdo principal -->
-            <div class="flex-1 flex flex-col min-w-0">
+            <!-- Conteúdo principal — rola por conta própria, independente do menu -->
+            <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
                 <!-- Overlay pra fechar o menu no mobile -->
                 <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false"
                     class="fixed inset-0 bg-black/30 z-30 lg:hidden"></div>
