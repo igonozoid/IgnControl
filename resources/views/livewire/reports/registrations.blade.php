@@ -17,6 +17,7 @@
     </div>
 
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="w-full text-xs">
             @if ($type === 'accounts')
                 <thead class="bg-gray-50 dark:bg-neutral-700/50 text-xs text-gray-500 dark:text-neutral-400 uppercase">
@@ -109,5 +110,6 @@
                 </tbody>
             @endif
         </table>
+        </div>
     </div>
 </div>

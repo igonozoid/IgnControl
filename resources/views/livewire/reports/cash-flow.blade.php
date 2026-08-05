@@ -37,6 +37,7 @@
     </div>
 
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="w-full text-xs">
             <thead class="bg-gray-50 dark:bg-neutral-700/50 text-xs text-gray-500 dark:text-neutral-400 uppercase">
                 <tr>
@@ -61,5 +62,6 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 </div>

@@ -114,6 +114,7 @@
         @endif
 
         <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                 <thead class="bg-gray-50 dark:bg-neutral-700/50">
                     <tr>
@@ -163,6 +164,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="mt-3">

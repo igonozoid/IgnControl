@@ -37,6 +37,7 @@
                         {{ number_format($section['total'], 2, ',', '.') }}
                     </p>
                 </div>
+                <div class="overflow-x-auto">
                 <table class="w-full text-xs">
                     <tbody>
                         @foreach ($section['income'] as $categoryName => $total)
@@ -53,6 +54,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
         @empty
             <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 text-center text-xs text-gray-500 dark:text-neutral-400">
