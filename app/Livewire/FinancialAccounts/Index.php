@@ -32,6 +32,8 @@ class Index extends Component
     public string $filterType = '';
     #[Url]
     public string $filterCurrency = '';
+    #[Url]
+    public string $filterStatus = '';
 
     public bool $showForm = false;
     public ?int $editingId = null;
@@ -47,6 +49,9 @@ class Index extends Component
 
     #[Validate('numeric')]
     public string $opening_balance = '0';
+
+    #[Validate('boolean')]
+    public bool $is_active = true;
 
     public function mount(): void
     {
@@ -65,6 +70,7 @@ class Index extends Component
         $this->type = 'cash';
         $this->currency_code = 'BRL';
         $this->opening_balance = '0';
+        $this->is_active = true;
         $this->showForm = true;
     }
 
@@ -79,6 +85,7 @@ class Index extends Component
         $this->type = $account->type;
         $this->currency_code = $account->currency_code;
         $this->opening_balance = (string) $account->opening_balance;
+        $this->is_active = $account->is_active;
         $this->showForm = true;
     }
 
@@ -108,6 +115,7 @@ class Index extends Component
     {
         $this->showForm = false;
         $this->reset(['name', 'type', 'currency_code', 'opening_balance', 'editingId']);
+        $this->is_active = true;
     }
 
     public function render()
@@ -116,6 +124,7 @@ class Index extends Component
             ->when($this->search !== '', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
             ->when($this->filterType !== '', fn ($q) => $q->where('type', $this->filterType))
             ->when($this->filterCurrency !== '', fn ($q) => $q->where('currency_code', $this->filterCurrency))
+            ->when($this->filterStatus !== '', fn ($q) => $q->where('is_active', $this->filterStatus === 'active'))
             ->orderBy('name')
             ->paginate(15);
 

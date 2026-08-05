@@ -276,6 +276,61 @@ class FinancialEntriesScreenTest extends TestCase
         $this->assertStringContainsString('(3/3)', $entries[2]->description);
     }
 
+    public function test_defaults_to_the_current_month_and_year_on_load(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->assertSet('period', (string) (now()->month - 1))
+            ->assertSet('year', (string) now()->year);
+    }
+
+    public function test_period_quarter_filters_entries_within_that_quarter(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'description' => 'Despesa de março',
+            'due_date' => '2026-03-05',
+        ]);
+        $this->actingAs($user);
+
+        // 1º trimestre (período 12) = jan/fev/mar.
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('period', '12')->set('year', '2026')
+            ->assertSee('Despesa de março');
+
+        // 2º trimestre (período 13) = abr/mai/jun — não deveria achar.
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('period', '13')->set('year', '2026')
+            ->assertDontSee('Despesa de março');
+    }
+
+    public function test_period_todo_periodo_ignores_year(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'description' => 'Despesa antiga',
+            'due_date' => '2019-06-01',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->set('period', '19')->set('year', '2026')
+            ->assertSee('Despesa antiga');
+    }
+
     public function test_filter_by_movement_date_finds_entry_due_in_a_different_month(): void
     {
         $company = Company::factory()->create();
@@ -291,15 +346,16 @@ class FinancialEntriesScreenTest extends TestCase
         ]);
         $this->actingAs($user);
 
-        // Filtrando por vencimento (padrão), janeiro não deveria achar nada.
+        // Filtrando por vencimento (padrão), janeiro (período 0) não
+        // deveria achar nada.
         Livewire::test(Index::class)->set('tab', 'expense')
-            ->set('month', '1')->set('year', '2026')
+            ->set('period', '0')->set('year', '2026')
             ->assertDontSee('Serviço de janeiro');
 
         // Filtrando por competência, aparece em janeiro.
         Livewire::test(Index::class)->set('tab', 'expense')
             ->set('filterDateType', 'movement')
-            ->set('month', '1')->set('year', '2026')
+            ->set('period', '0')->set('year', '2026')
             ->assertSee('Serviço de janeiro');
     }
 
@@ -320,12 +376,12 @@ class FinancialEntriesScreenTest extends TestCase
 
         Livewire::test(Index::class)->set('tab', 'expense')
             ->set('filterDateType', 'both')
-            ->set('month', '2')->set('year', '2026')
+            ->set('period', '1')->set('year', '2026') // fevereiro
             ->assertSee('Serviço de janeiro');
 
         Livewire::test(Index::class)->set('tab', 'expense')
             ->set('filterDateType', 'both')
-            ->set('month', '1')->set('year', '2026')
+            ->set('period', '0')->set('year', '2026') // janeiro
             ->assertSee('Serviço de janeiro');
     }
 

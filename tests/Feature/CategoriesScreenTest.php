@@ -77,4 +77,42 @@ class CategoriesScreenTest extends TestCase
 
         $this->assertDatabaseMissing('categories', ['id' => $category->id]);
     }
+
+    public function test_can_deactivate_a_category_and_filter_by_status(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $category = Category::factory()->create(['company_id' => $company->id, 'name' => 'Antiga', 'is_active' => true]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('edit', $category->id)
+            ->set('is_active', false)
+            ->call('save');
+
+        $this->assertFalse($category->refresh()->is_active);
+
+        // "Antiga" também aparece sempre no <select> de categoria-pai do
+        // formulário (que lista todas, sem filtro) — por isso o assert
+        // precisa mirar na LINHA da tabela (wire:key), não no texto solto,
+        // mesmo padrão já usado no teste de "only needs review".
+        Livewire::test(Index::class)->set('filterStatus', 'inactive')
+            ->assertSee('wire:key="category-'.$category->id.'"', false);
+        Livewire::test(Index::class)->set('filterStatus', 'active')
+            ->assertDontSee('wire:key="category-'.$category->id.'"', false);
+    }
+
+    public function test_inactive_category_is_not_offered_as_an_option_for_new_entries(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        \App\Models\Currency::firstOrCreate(['code' => 'BRL'], ['name' => 'Real', 'symbol' => 'R$']);
+        \App\Models\FinancialAccount::factory()->create(['company_id' => $company->id]);
+        Category::factory()->create(['company_id' => $company->id, 'name' => 'Categoria Inativa', 'type' => 'expense', 'is_active' => false]);
+        $this->actingAs($user);
+
+        Livewire::test(\App\Livewire\FinancialEntries\Index::class)->set('tab', 'expense')
+            ->call('create')
+            ->assertDontSee('Categoria Inativa');
+    }
 }

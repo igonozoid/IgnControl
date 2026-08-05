@@ -35,8 +35,12 @@ class Index extends Component
     public string $tab = 'expense'; // expense | income | transfer
 
     // Filtros
+    // Período — mesmas 20 opções do sistema legado: os 12 meses (0-11),
+    // os 4 trimestres (12-15), os 2 semestres (16-17), "Ano todo" (18) e
+    // "Todo período" (19, ignora até o ano). Por padrão abre já filtrado
+    // no mês/ano atual (ver mount()).
     #[Url]
-    public string $month = '';
+    public string $period = '';
     #[Url]
     public string $year = '';
     #[Url]
@@ -135,6 +139,41 @@ class Index extends Component
         abort_unless(Auth::user()->hasModuleAccess('financial', 'read'), 403);
         $this->due_date = now()->toDateString();
         $this->movement_date = now()->toDateString();
+        // Igual ao legado: abre já filtrado no mês e ano atuais, não em
+        // "todos" — quem quiser ver tudo escolhe "Todo período" na mão.
+        $this->period = $this->period !== '' ? $this->period : (string) (now()->month - 1);
+        $this->year = $this->year !== '' ? $this->year : (string) now()->year;
+    }
+
+    /**
+     * Meses cobertos pela opção de período selecionada (índices 1-12).
+     * Null quando o período não restringe por mês (18 = "Ano todo", que
+     * ainda filtra pelo ano; 19 = "Todo período" nem chega a chamar isto,
+     * ver baseQuery()).
+     */
+    private function periodMonths(): ?array
+    {
+        $p = (int) $this->period;
+
+        if ($p >= 0 && $p <= 11) {
+            return [$p + 1];
+        }
+
+        if ($p >= 12 && $p <= 15) {
+            $quarter = $p - 12;
+
+            return [$quarter * 3 + 1, $quarter * 3 + 2, $quarter * 3 + 3];
+        }
+
+        if ($p === 16) {
+            return range(1, 6);
+        }
+
+        if ($p === 17) {
+            return range(7, 12);
+        }
+
+        return null; // 18 — Ano todo
     }
 
     /** Mantém a competência acompanhando o vencimento enquanto o "movimento = vencimento" estiver marcado. */
@@ -419,22 +458,27 @@ class Index extends Component
             ->with(['financialAccount', 'destinationAccount', 'contact', 'category', 'costCenter'])
             ->where('type', $this->tab);
 
-        if ($this->month !== '' || $this->year !== '') {
+        // "Todo período" (19) ignora data por completo — nem o ano entra
+        // no filtro, igual ao legado.
+        if ($this->period !== '19' && $this->year !== '') {
             $columns = match ($this->filterDateType) {
                 'movement' => ['movement_date'],
                 'both' => ['due_date', 'movement_date'],
                 default => ['due_date'],
             };
+            $months = $this->periodMonths();
 
-            $query->where(function ($q) use ($columns) {
+            $query->where(function ($q) use ($columns, $months) {
                 foreach ($columns as $column) {
-                    $q->orWhere(function ($sub) use ($column) {
-                        if ($this->month !== '' && $this->year !== '') {
-                            $sub->whereYear($column, $this->year)->whereMonth($column, $this->month);
-                        } elseif ($this->year !== '') {
-                            $sub->whereYear($column, $this->year);
-                        } elseif ($this->month !== '') {
-                            $sub->whereMonth($column, $this->month);
+                    $q->orWhere(function ($sub) use ($column, $months) {
+                        $sub->whereYear($column, $this->year);
+
+                        if ($months !== null) {
+                            $sub->where(function ($m) use ($column, $months) {
+                                foreach ($months as $mo) {
+                                    $m->orWhereMonth($column, $mo);
+                                }
+                            });
                         }
                     });
                 }

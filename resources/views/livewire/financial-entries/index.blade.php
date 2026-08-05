@@ -32,20 +32,37 @@
          ficam num "mais filtros" à parte pra não estourar a linha. --}}
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
         <div class="flex flex-wrap items-end gap-2">
-            <div class="w-20">
-                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Mês</label>
-                <select wire:model.live="month" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
-                    <option value="">Todos</option>
-                    @foreach (range(1, 12) as $m)
-                        <option value="{{ $m }}">{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}</option>
-                    @endforeach
+            <div class="w-36">
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Período</label>
+                {{-- Mesmas 20 opções do sistema legado: os 12 meses por
+                     nome, os 4 trimestres, os 2 semestres, "Ano todo" e
+                     "Todo período" (esta última ignora até o ano). --}}
+                <select wire:model.live="period" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
+                    <optgroup label="Meses">
+                        @foreach (['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'] as $i => $label)
+                            <option value="{{ $i }}">{{ $label }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="Trimestres">
+                        <option value="12">1º Tri</option>
+                        <option value="13">2º Tri</option>
+                        <option value="14">3º Tri</option>
+                        <option value="15">4º Tri</option>
+                    </optgroup>
+                    <optgroup label="Semestres">
+                        <option value="16">1º Sem</option>
+                        <option value="17">2º Sem</option>
+                    </optgroup>
+                    <optgroup label="Outros">
+                        <option value="18">Ano todo</option>
+                        <option value="19">Todo período</option>
+                    </optgroup>
                 </select>
             </div>
             <div class="w-24">
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Ano</label>
-                <select wire:model.live="year" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
-                    <option value="">Todos</option>
-                    @foreach (range(now()->year, now()->year - 4) as $y)
+                <select wire:model.live="year" @disabled($period === '19') class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 disabled:opacity-60">
+                    @foreach (range(now()->year, now()->year - 24) as $y)
                         <option value="{{ $y }}">{{ $y }}</option>
                     @endforeach
                 </select>

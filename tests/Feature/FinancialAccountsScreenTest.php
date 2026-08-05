@@ -103,4 +103,23 @@ class FinancialAccountsScreenTest extends TestCase
 
         $this->assertDatabaseMissing('financial_accounts', ['id' => $account->id]);
     }
+
+    public function test_can_deactivate_an_account_and_filter_by_status(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id, 'name' => 'Conta Velha', 'is_active' => true]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('edit', $account->id)
+            ->set('is_active', false)
+            ->call('save');
+
+        $this->assertFalse($account->refresh()->is_active);
+
+        Livewire::test(Index::class)->set('filterStatus', 'inactive')->assertSee('Conta Velha');
+        Livewire::test(Index::class)->set('filterStatus', 'active')->assertDontSee('Conta Velha');
+    }
 }
