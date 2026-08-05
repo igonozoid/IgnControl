@@ -35,6 +35,9 @@ class Index extends Component
     #[Validate('nullable|exists:categories,id')]
     public ?int $parent_id = null;
 
+    #[Validate('nullable|in:01 RECEITA BRUTA,02 DEDUCOES DA RECEITA,03 CUSTOS DOS SERVICOS/VENDAS,04 DESPESAS OPERACIONAIS,05 RESULTADO FINANCEIRO,06 OUTRAS RECEITAS/DESPESAS')]
+    public string $dre_group = '';
+
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('financial', 'read'), 403);
@@ -48,7 +51,7 @@ class Index extends Component
     public function create(): void
     {
         abort_unless($this->canWrite, 403);
-        $this->reset(['name', 'type', 'parent_id', 'editingId']);
+        $this->reset(['name', 'type', 'parent_id', 'dre_group', 'editingId']);
         $this->type = 'expense';
         $this->showForm = true;
     }
@@ -63,6 +66,7 @@ class Index extends Component
         $this->name = $category->name;
         $this->type = $category->type;
         $this->parent_id = $category->parent_id;
+        $this->dre_group = (string) $category->dre_group;
         $this->showForm = true;
     }
 
@@ -71,6 +75,7 @@ class Index extends Component
         abort_unless($this->canWrite, 403);
 
         $data = $this->validate();
+        $data['dre_group'] = $data['dre_group'] ?: null;
 
         if ($this->editingId) {
             $data['needs_review'] = false;
@@ -80,7 +85,7 @@ class Index extends Component
         }
 
         $this->showForm = false;
-        $this->reset(['name', 'type', 'parent_id', 'editingId']);
+        $this->reset(['name', 'type', 'parent_id', 'dre_group', 'editingId']);
     }
 
     public function delete(int $id): void
@@ -98,7 +103,7 @@ class Index extends Component
     public function cancel(): void
     {
         $this->showForm = false;
-        $this->reset(['name', 'type', 'parent_id', 'editingId']);
+        $this->reset(['name', 'type', 'parent_id', 'dre_group', 'editingId']);
     }
 
     public function render()

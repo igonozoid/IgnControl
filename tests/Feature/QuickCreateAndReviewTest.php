@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Categories\Index as CategoriesIndex;
-use App\Livewire\Contacts\Index as ContactsIndex;
+use App\Livewire\Contacts\Form as ContactsForm;
 use App\Livewire\CostCenters\Index as CostCentersIndex;
 use App\Livewire\FinancialEntries\Index as FinancialEntriesIndex;
 use App\Models\Category;
@@ -102,8 +102,7 @@ class QuickCreateAndReviewTest extends TestCase
         $contact = Contact::factory()->create(['company_id' => $company->id, 'needs_review' => true]);
         $this->actingAs($user);
 
-        Livewire::test(ContactsIndex::class)
-            ->call('edit', $contact->id)
+        Livewire::test(ContactsForm::class, ['contact' => $contact])
             ->set('email', 'contato@exemplo.com')
             ->call('save');
 

@@ -22,6 +22,7 @@ class FinancialEntryFactory extends Factory
             'amount' => $this->faker->randomFloat(2, 10, 5000),
             'description' => $this->faker->sentence(4),
             'due_date' => now()->toDateString(),
+            'movement_date' => now()->toDateString(),
             'status' => 'pending',
         ];
     }

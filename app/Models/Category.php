@@ -13,11 +13,23 @@ class Category extends Model
 {
     use HasFactory, BelongsToCompany, Auditable;
 
+    // Seções do DRE gerencial (mesma estrutura usada no sistema legado).
+    // Ordem importa: é a ordem de exibição no relatório.
+    public const DRE_GROUPS = [
+        '01 RECEITA BRUTA' => 'Receita Bruta',
+        '02 DEDUCOES DA RECEITA' => 'Deduções da Receita',
+        '03 CUSTOS DOS SERVICOS/VENDAS' => 'Custos dos Serviços/Vendas',
+        '04 DESPESAS OPERACIONAIS' => 'Despesas Operacionais',
+        '05 RESULTADO FINANCEIRO' => 'Resultado Financeiro',
+        '06 OUTRAS RECEITAS/DESPESAS' => 'Outras Receitas/Despesas',
+    ];
+
     protected $fillable = [
         'company_id',
         'parent_id',
         'name',
         'type',
+        'dre_group',
         'is_active',
         'needs_review',
     ];

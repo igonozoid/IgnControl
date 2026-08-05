@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Contacts\Form;
 use App\Livewire\Contacts\Index;
 use App\Models\Company;
 use App\Models\Contact;
@@ -54,7 +55,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'read');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)->call('create')->assertForbidden();
+        Livewire::test(Form::class)->assertForbidden();
     }
 
     public function test_full_access_user_can_create_and_delete(): void
@@ -63,8 +64,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Fornecedor Teste')
             ->set('is_supplier', true)
             ->call('save');
@@ -88,8 +88,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Aniversariante')
             ->set('is_customer', true)
             ->set('birth_date', '1990-05-20')
@@ -110,8 +109,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Sem Nascimento')
             ->call('save');
 
@@ -126,8 +124,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Endereço Completo')
             ->set('city', 'Curitiba')
             ->set('state', 'PR')
@@ -149,8 +146,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Com Crédito')
             ->set('purchase_frequency', 'Mensal')
             ->set('classification', 'A')
@@ -180,8 +176,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Sem Data')
             ->set('credit_checked', true)
             ->call('save')
@@ -194,8 +189,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Sem Local')
             ->set('has_credit_issue', true)
             ->call('save')
@@ -208,8 +202,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Com Referências')
             ->call('addCommercialReferenceRow')
             ->set('commercialReferenceRows.0.name', 'Fornecedor Amigo')
@@ -249,8 +242,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('name', 'Cliente Removeu Referência')
             ->call('addCommercialReferenceRow')
             ->set('commercialReferenceRows.0.name', 'Vai Sair')
@@ -273,8 +265,7 @@ class ContactsScreenTest extends TestCase
         $contact->commercialReferences()->create(['company_id' => $company->id, 'name' => 'Ref Existente', 'phone' => '4130000000']);
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('edit', $contact->id)
+        Livewire::test(Form::class, ['contact' => $contact])
             ->assertSet('commercialReferenceRows.0.name', 'Ref Existente')
             ->assertSet('commercialReferenceRows.0.phone', '4130000000');
     }
@@ -321,13 +312,11 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('document', '123.456.789-00')
             ->assertDontSee('Busca Básica');
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('document', '11.222.333/0001-81')
             ->assertSee('Busca Básica');
     }
@@ -342,8 +331,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('document', '11.222.333/0001-81')
             ->call('buscarCnpj')
             ->assertSet('name', 'Empresa Exemplo LTDA')
@@ -364,8 +352,7 @@ class ContactsScreenTest extends TestCase
         $user = $this->userWithLevel($company, 'full');
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->set('document', '11.222.333/0001-81')
             ->call('buscarCnpj')
             ->call('save');
@@ -394,8 +381,7 @@ class ContactsScreenTest extends TestCase
         ]);
         $this->actingAs($user);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->assertDontSee('Busca Avançada');
 
         Credential::factory()->create([
@@ -404,8 +390,7 @@ class ContactsScreenTest extends TestCase
             'url' => 'https://www.spcbrasil.org.br/login',
         ]);
 
-        Livewire::test(Index::class)
-            ->call('create')
+        Livewire::test(Form::class)
             ->assertSee('Busca Avançada — SPC Brasil');
     }
 }

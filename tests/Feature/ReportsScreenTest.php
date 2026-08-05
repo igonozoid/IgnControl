@@ -80,6 +80,7 @@ class ReportsScreenTest extends TestCase
             'type' => 'income',
             'amount' => '1000.00',
             'due_date' => now()->toDateString(),
+            'movement_date' => now()->toDateString(),
         ]);
         FinancialEntry::factory()->create([
             'company_id' => $company->id,
@@ -88,8 +89,9 @@ class ReportsScreenTest extends TestCase
             'type' => 'expense',
             'amount' => '400.00',
             'due_date' => now()->toDateString(),
+            'movement_date' => now()->toDateString(),
         ]);
-        // Fora do período - não deve entrar na soma.
+        // Fora do período (competência) - não deve entrar na soma.
         FinancialEntry::factory()->create([
             'company_id' => $company->id,
             'financial_account_id' => $account->id,
@@ -97,6 +99,7 @@ class ReportsScreenTest extends TestCase
             'type' => 'income',
             'amount' => '999.00',
             'due_date' => now()->subYear()->toDateString(),
+            'movement_date' => now()->subYear()->toDateString(),
         ]);
 
         $this->actingAs($user);
@@ -110,6 +113,94 @@ class ReportsScreenTest extends TestCase
             ->assertSee('400,00')
             ->assertSee('600,00') // resultado
             ->assertDontSee('999');
+    }
+
+    public function test_dre_groups_by_competencia_date_not_due_date(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $category = Category::factory()->create(['company_id' => $company->id, 'name' => 'Serviços Prestados']);
+
+        // Serviço prestado em janeiro, nota com vencimento em fevereiro —
+        // tem que cair no DRE de janeiro (competência), não no de fevereiro.
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'category_id' => $category->id,
+            'type' => 'income',
+            'amount' => '500.00',
+            'movement_date' => '2026-01-15',
+            'due_date' => '2026-02-15',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Dre::class)
+            ->set('from', '2026-01-01')
+            ->set('to', '2026-01-31')
+            ->assertSee('500,00');
+
+        Livewire::test(Dre::class)
+            ->set('from', '2026-02-01')
+            ->set('to', '2026-02-28')
+            ->assertDontSee('500,00');
+    }
+
+    public function test_dre_uses_explicit_dre_group_when_set(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $category = Category::factory()->create([
+            'company_id' => $company->id,
+            'name' => 'Bônus de fim de ano',
+            'dre_group' => '06 OUTRAS RECEITAS/DESPESAS',
+        ]);
+
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'amount' => '300.00',
+            'movement_date' => now()->toDateString(),
+            'due_date' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Dre::class)
+            ->set('from', now()->startOfMonth()->toDateString())
+            ->set('to', now()->toDateString())
+            ->assertSee('Outras Receitas/Despesas')
+            ->assertSee('Bônus de fim de ano');
+    }
+
+    public function test_dre_infers_financial_result_section_from_category_keyword(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $category = Category::factory()->create(['company_id' => $company->id, 'name' => 'Juros de Empréstimo']);
+
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'category_id' => $category->id,
+            'type' => 'expense',
+            'amount' => '150.00',
+            'movement_date' => now()->toDateString(),
+            'due_date' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Dre::class)
+            ->set('from', now()->startOfMonth()->toDateString())
+            ->set('to', now()->toDateString())
+            ->assertSee('Resultado Financeiro')
+            ->assertSee('Juros de Empréstimo');
     }
 
     public function test_dre_is_scoped_to_the_active_company(): void

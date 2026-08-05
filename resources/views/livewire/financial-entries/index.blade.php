@@ -231,7 +231,7 @@
                 </div>
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">Vencimento</label>
-                    <input type="date" wire:model="due_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    <input type="date" wire:model.live="due_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                     @error('due_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
                 <div>
@@ -239,7 +239,38 @@
                     <input type="date" wire:model="paid_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                     @error('paid_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Nº do documento</label>
+                    <input type="text" wire:model="document_number" placeholder="Ex.: NF 1234" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Data de competência</label>
+                    <input type="date" wire:model="movement_date" @disabled($movementEqualsDue) class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm disabled:opacity-60">
+                    <label class="flex items-center gap-1.5 mt-1 text-gray-500 dark:text-neutral-400">
+                        <input type="checkbox" wire:model.live="movementEqualsDue" class="dark:bg-neutral-700 dark:border-neutral-600">
+                        Competência = vencimento
+                    </label>
+                    <p class="text-gray-400 dark:text-neutral-500 mt-1">Usada no DRE (regime de competência) — quando o fato gerador aconteceu, nem sempre igual ao vencimento.</p>
+                    @error('movement_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
             </div>
+
+            @if (! $editingId && $tab !== 'transfer')
+                <div class="border-t border-gray-100 dark:border-neutral-700 pt-3">
+                    <label class="flex items-center gap-1.5 text-gray-700 dark:text-neutral-300">
+                        <input type="checkbox" wire:model.live="installmentsEnabled" class="dark:bg-neutral-700 dark:border-neutral-600">
+                        Parcelar (gera vários lançamentos mensais)
+                    </label>
+                    @if ($installmentsEnabled)
+                        <div class="mt-2">
+                            <label class="block font-medium text-gray-700 dark:text-neutral-300">Nº de parcelas</label>
+                            <input type="number" min="2" max="60" wire:model="installmentsCount" class="mt-1 block w-32 rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                            @error('installmentsCount') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                            <p class="text-gray-400 dark:text-neutral-500 mt-1">O valor acima é dividido pelo nº de parcelas; a 1ª vence na data informada e as demais, mensalmente. A competência fica igual em todas.</p>
+                        </div>
+                    @endif
+                </div>
+            @endif
 
             <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">Descrição</label>

@@ -4,6 +4,7 @@ namespace App\Livewire\FinancialEntries;
 
 use App\Exceptions\PeriodLockedException;
 use App\Models\Category;
+use Carbon\Carbon;
 use App\Models\Contact;
 use App\Models\CostCenter;
 use App\Models\Currency;
@@ -97,13 +98,50 @@ class Index extends Component
     #[Validate('required|date')]
     public string $due_date = '';
 
+    // Data de competência (regime de competência) — quando o fato gerador
+    // aconteceu, usada no DRE. Por padrão acompanha o vencimento (é o caso
+    // mais comum: nota e vencimento no mesmo dia), mas pode ser destacada
+    // quando a compra/serviço é de um mês e o vencimento cai no seguinte.
+    #[Validate('required|date')]
+    public string $movement_date = '';
+
+    public bool $movementEqualsDue = true;
+
+    #[Validate('nullable|string|max:255')]
+    public string $document_number = '';
+
     #[Validate('nullable|date')]
     public string $paid_date = '';
+
+    // Parcelamento — só se aplica na criação (não em edição). Gera N
+    // lançamentos com vencimento mensal a partir do due_date informado; a
+    // competência (movement_date) é a mesma pra todas as parcelas, é a
+    // mesma nota/compra só paga em partes.
+    public bool $installmentsEnabled = false;
+
+    #[Validate('required_if:installmentsEnabled,true|integer|min:2|max:60')]
+    public string $installmentsCount = '2';
 
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('financial', 'read'), 403);
         $this->due_date = now()->toDateString();
+        $this->movement_date = now()->toDateString();
+    }
+
+    /** Mantém a competência acompanhando o vencimento enquanto o "movimento = vencimento" estiver marcado. */
+    public function updatedDueDate(string $value): void
+    {
+        if ($this->movementEqualsDue) {
+            $this->movement_date = $value;
+        }
+    }
+
+    public function updatedMovementEqualsDue(bool $value): void
+    {
+        if ($value) {
+            $this->movement_date = $this->due_date;
+        }
     }
 
     public function getCanWriteProperty(): bool
@@ -190,13 +228,17 @@ class Index extends Component
         $this->reset([
             'financial_account_id', 'destination_account_id', 'contact_id',
             'category_id', 'cost_center_id', 'amount', 'description',
-            'paid_date', 'editingId',
+            'document_number', 'paid_date', 'editingId',
+            'installmentsEnabled',
             'showQuickContact', 'quickContactName',
             'showQuickCategory', 'quickCategoryName',
             'showQuickCostCenter', 'quickCostCenterName',
         ]);
         $this->currency_code = 'BRL';
         $this->due_date = now()->toDateString();
+        $this->movement_date = now()->toDateString();
+        $this->movementEqualsDue = true;
+        $this->installmentsCount = '2';
     }
 
     public function create(): void
@@ -223,8 +265,12 @@ class Index extends Component
         $this->currency_code = $entry->currency_code;
         $this->amount = (string) $entry->amount;
         $this->description = (string) $entry->description;
+        $this->document_number = (string) $entry->document_number;
         $this->due_date = $entry->due_date->toDateString();
+        $this->movement_date = $entry->movement_date?->toDateString() ?? $entry->due_date->toDateString();
+        $this->movementEqualsDue = $this->movement_date === $this->due_date;
         $this->paid_date = $entry->paid_date?->toDateString() ?? '';
+        $this->installmentsEnabled = false;
         $this->lockError = null;
         $this->showForm = true;
     }
@@ -238,7 +284,9 @@ class Index extends Component
             'currency_code' => ['required', 'string', 'size:3', 'exists:currencies,code'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'description' => ['nullable', 'string'],
+            'document_number' => ['nullable', 'string', 'max:255'],
             'due_date' => ['required', 'date'],
+            'movement_date' => ['required', 'date'],
             'paid_date' => ['nullable', 'date'],
         ];
 
@@ -250,11 +298,19 @@ class Index extends Component
             $rules['cost_center_id'] = ['nullable', 'exists:cost_centers,id'];
         }
 
+        // Parcelamento só faz sentido criando um lançamento novo — editar
+        // sempre mexe num registro só.
+        $usingInstallments = ! $this->editingId && $this->tab !== 'transfer' && $this->installmentsEnabled;
+        if ($usingInstallments) {
+            $rules['installmentsCount'] = ['required', 'integer', 'min:2', 'max:60'];
+        }
+
         $data = $this->validate($rules);
         // Campo "Pago em" em branco chega como string vazia, não null — e
         // o MySQL (diferente do SQLite dos testes) rejeita '' numa coluna
         // DATE. Normaliza antes de qualquer outra coisa usar esse valor.
         $data['paid_date'] = $data['paid_date'] ?: null;
+        $data['document_number'] = $data['document_number'] ?: null;
         $data['type'] = $this->tab;
         $data['status'] = ! empty($data['paid_date']) ? 'paid' : 'pending';
 
@@ -263,6 +319,8 @@ class Index extends Component
         try {
             if ($this->editingId) {
                 FinancialEntry::query()->findOrFail($this->editingId)->update($data);
+            } elseif ($usingInstallments) {
+                $this->createInstallments($data, (int) $data['installmentsCount']);
             } else {
                 FinancialEntry::query()->create($data);
             }
@@ -274,6 +332,37 @@ class Index extends Component
 
         $this->showForm = false;
         $this->resetForm();
+    }
+
+    /**
+     * Gera N lançamentos mensais a partir de um único formulário — é a
+     * mesma compra/nota, só o pagamento é parcelado. A competência
+     * (movement_date) fica igual em todas as parcelas (o fato gerador
+     * aconteceu uma vez só); o vencimento avança um mês por parcela; e o
+     * valor total é dividido pelo número de parcelas, com a última
+     * absorvendo o resto de centavos do arredondamento.
+     */
+    private function createInstallments(array $data, int $count): void
+    {
+        unset($data['installmentsCount']);
+
+        $totalCents = (int) round(((float) $data['amount']) * 100);
+        $baseCents = intdiv($totalCents, $count);
+        $remainderCents = $totalCents - ($baseCents * $count);
+
+        $baseDueDate = Carbon::parse($data['due_date']);
+        $baseDescription = $data['description'];
+
+        for ($i = 0; $i < $count; $i++) {
+            $installmentCents = $baseCents + ($i === $count - 1 ? $remainderCents : 0);
+
+            FinancialEntry::query()->create([
+                ...$data,
+                'amount' => number_format($installmentCents / 100, 2, '.', ''),
+                'due_date' => $baseDueDate->copy()->addMonthsNoOverflow($i)->toDateString(),
+                'description' => trim(($baseDescription ?: '').' ('.($i + 1)."/{$count})"),
+            ]);
+        }
     }
 
     /**

@@ -194,4 +194,102 @@ class FinancialEntriesScreenTest extends TestCase
 
         $this->assertDatabaseMissing('financial_entries', ['id' => $entry->id]);
     }
+
+    public function test_document_number_and_movement_date_are_saved(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->call('create')
+            ->set('financial_account_id', $account->id)
+            ->set('currency_code', 'BRL')
+            ->set('amount', '80.00')
+            ->set('due_date', '2026-02-15')
+            ->set('document_number', 'NF 4521')
+            ->set('movementEqualsDue', false)
+            ->set('movement_date', '2026-01-31')
+            ->set('description', 'Serviço de janeiro pago em fevereiro')
+            ->call('save');
+
+        $this->assertDatabaseHas('financial_entries', [
+            'company_id' => $company->id,
+            'document_number' => 'NF 4521',
+            'movement_date' => '2026-01-31',
+            'due_date' => '2026-02-15',
+        ]);
+    }
+
+    public function test_movement_date_follows_due_date_while_checkbox_is_checked(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->call('create')
+            ->assertSet('movementEqualsDue', true)
+            ->set('due_date', '2026-03-10')
+            ->assertSet('movement_date', '2026-03-10');
+    }
+
+    public function test_installments_generate_multiple_entries_with_shared_movement_date(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->call('create')
+            ->set('financial_account_id', $account->id)
+            ->set('currency_code', 'BRL')
+            ->set('amount', '100.00')
+            ->set('due_date', '2026-01-10')
+            ->set('description', 'Compra parcelada')
+            ->set('installmentsEnabled', true)
+            ->set('installmentsCount', '3')
+            ->call('save');
+
+        $entries = FinancialEntry::query()
+            ->where('company_id', $company->id)
+            ->orderBy('due_date')
+            ->get();
+
+        $this->assertCount(3, $entries);
+        $this->assertSame('2026-01-10', $entries[0]->due_date->toDateString());
+        $this->assertSame('2026-02-10', $entries[1]->due_date->toDateString());
+        $this->assertSame('2026-03-10', $entries[2]->due_date->toDateString());
+
+        // Todas com a mesma competência (é a mesma compra).
+        $this->assertTrue($entries->every(fn ($e) => $e->movement_date->toDateString() === '2026-01-10'));
+
+        // 100,00 / 3 = 33,33 + 33,33 + 33,34 (a última absorve o resto).
+        // amount é decimal:4 no model, por isso compara com 4 casas.
+        $this->assertSame('33.3300', (string) $entries[0]->amount);
+        $this->assertSame('33.3300', (string) $entries[1]->amount);
+        $this->assertSame('33.3400', (string) $entries[2]->amount);
+
+        $this->assertStringContainsString('(1/3)', $entries[0]->description);
+        $this->assertStringContainsString('(3/3)', $entries[2]->description);
+    }
+
+    public function test_installments_are_not_offered_when_editing_an_existing_entry(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $entry = FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->set('tab', 'expense')
+            ->call('edit', $entry->id)
+            ->assertDontSee('Parcelar (gera vários lançamentos mensais)');
+    }
 }

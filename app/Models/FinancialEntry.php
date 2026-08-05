@@ -25,7 +25,9 @@ class FinancialEntry extends Model
         'amount',
         'exchange_rate_id',
         'description',
+        'document_number',
         'due_date',
+        'movement_date',
         'paid_date',
         'status',
         'created_by',
@@ -38,6 +40,7 @@ class FinancialEntry extends Model
         // testes) grave um timestamp completo que quebraria comparações
         // tipo whereBetween('due_date', [...]) por ordenação de string.
         'due_date' => 'date:Y-m-d',
+        'movement_date' => 'date:Y-m-d',
         'paid_date' => 'date:Y-m-d',
     ];
 

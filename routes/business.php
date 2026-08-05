@@ -7,6 +7,7 @@ use App\Http\Controllers\ContactDocumentController;
 use App\Livewire\Admin\AuditLogs\Index as AdminAuditLogs;
 use App\Livewire\Admin\Credentials\Index as AdminCredentials;
 use App\Livewire\Categories\Index as CategoriesIndex;
+use App\Livewire\Contacts\Form as ContactsForm;
 use App\Livewire\Contacts\Index as ContactsIndex;
 use App\Livewire\CostCenters\Index as CostCentersIndex;
 use App\Livewire\FinancialAccounts\Index as FinancialAccountsIndex;
@@ -37,6 +38,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/financeiro/lancamentos', FinancialEntriesIndex::class)->name('financial-entries.index');
     Route::get('/financeiro/lancamentos/{financialEntry}/recibo', [FinancialEntryReceiptController::class, 'show'])->name('financial-entries.receipt');
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
+    Route::get('/contatos/novo', ContactsForm::class)->name('contacts.create');
+    Route::get('/contatos/{contact}/editar', ContactsForm::class)->name('contacts.edit');
     Route::get('/contatos/documentos/{contactDocument}', [ContactDocumentController::class, 'download'])->name('contacts.documents.download');
     Route::get('/agenda', TasksIndex::class)->name('tasks.index');
     Route::get('/rh', HrIndex::class)->name('hr.index');

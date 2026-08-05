@@ -62,6 +62,18 @@
                 </div>
             </div>
 
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Seção do DRE (opcional)</label>
+                <select wire:model="dre_group" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    <option value="">— inferir automaticamente pelo nome —</option>
+                    @foreach (\App\Models\Category::DRE_GROUPS as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-gray-400 dark:text-neutral-500 mt-1">Deixe em branco pra o DRE classificar sozinho pela palavra-chave do nome (ex.: "Juros" cai em Resultado Financeiro).</p>
+                @error('dre_group') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700">
                     <x-icon name="check" />
