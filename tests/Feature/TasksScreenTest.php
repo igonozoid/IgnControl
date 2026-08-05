@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Tasks\Index;
 use App\Models\Company;
+use App\Models\Contact;
 use App\Models\Permission;
 use App\Models\Task;
 use App\Models\User;
@@ -129,5 +130,114 @@ class TasksScreenTest extends TestCase
         $task = new Task(['status' => 'pending', 'due_date' => now()->subDay()->toDateString()]);
 
         $this->assertTrue($task->isOverdue());
+    }
+
+    public function test_month_view_shows_a_task_due_that_month(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Task::factory()->create(['company_id' => $company->id, 'title' => 'Reunião mensal', 'due_date' => '2026-08-15']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->set('anchorDate', '2026-08-01')
+            ->assertSee('Reunião mensal');
+    }
+
+    public function test_month_view_does_not_show_a_task_from_another_month(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Task::factory()->create(['company_id' => $company->id, 'title' => 'Tarefa de setembro', 'due_date' => '2026-09-20']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->set('anchorDate', '2026-08-01')
+            ->assertDontSee('Tarefa de setembro');
+    }
+
+    public function test_next_and_previous_period_move_the_anchor_date_by_view(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->set('anchorDate', '2026-08-15')
+            ->call('nextPeriod')
+            ->assertSet('anchorDate', '2026-09-15')
+            ->call('previousPeriod')
+            ->call('previousPeriod')
+            ->assertSet('anchorDate', '2026-07-15');
+
+        Livewire::test(Index::class)
+            ->set('view', 'day')
+            ->set('anchorDate', '2026-08-15')
+            ->call('nextPeriod')
+            ->assertSet('anchorDate', '2026-08-16');
+    }
+
+    public function test_go_to_day_switches_to_day_view_on_that_date(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->call('goToDate', '2026-08-20')
+            ->assertSet('view', 'day')
+            ->assertSet('anchorDate', '2026-08-20');
+    }
+
+    public function test_contact_birthday_appears_in_month_view(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Contact::factory()->create(['company_id' => $company->id, 'name' => 'Aniversariante', 'birth_date' => '1985-08-10']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->set('anchorDate', '2026-08-01')
+            ->assertSee('Aniversariante');
+    }
+
+    public function test_contact_birthday_appears_in_list_view_upcoming_widget(): void
+    {
+        $this->travelTo('2026-08-01');
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Contact::factory()->create(['company_id' => $company->id, 'name' => 'Cliente Aniversariante', 'birth_date' => '1990-08-10']);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->assertSee('Cliente Aniversariante');
+
+        $this->travelBack();
+    }
+
+    public function test_birthday_does_not_appear_outside_the_visible_range(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Contact::factory()->create(['company_id' => $company->id, 'name' => 'Aniversariante de Dezembro', 'birth_date' => '1985-12-25']);
+        $this->actingAs($user);
+
+        // Verifica direto nos dados da grade (não no HTML), porque o nome do
+        // contato legitimamente aparece em outro lugar da tela — no dropdown
+        // "Vincular a um contato" do formulário, que lista todos os
+        // contatos, não só os aniversariantes do mês visível.
+        $cells = Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->set('anchorDate', '2026-08-01')
+            ->viewData('cells');
+
+        $hasBirthday = collect($cells)->contains(fn ($cell) => $cell['birthdays']->isNotEmpty());
+
+        $this->assertFalse($hasBirthday);
     }
 }

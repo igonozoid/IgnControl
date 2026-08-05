@@ -17,11 +17,14 @@ class Contact extends Model
         'name',
         'display_name',
         'document',
+        'birth_date',
+        'secondary_document',
         'email',
         'phone',
         'mobile_phone',
         'address_line1',
         'address_line2',
+        'district',
         'city',
         'state',
         'postal_code',
@@ -37,6 +40,7 @@ class Contact extends Model
     ];
 
     protected $casts = [
+        'birth_date' => 'date:Y-m-d',
         'is_supplier' => 'boolean',
         'is_customer' => 'boolean',
         'is_employee' => 'boolean',

@@ -78,4 +78,42 @@ class ContactsScreenTest extends TestCase
 
         $this->assertDatabaseMissing('contacts', ['id' => $contact->id]);
     }
+
+    public function test_full_access_user_can_save_birth_date_and_extra_fields(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Cliente Aniversariante')
+            ->set('is_customer', true)
+            ->set('birth_date', '1990-05-20')
+            ->set('secondary_document', 'RG 12.345.678-9')
+            ->set('district', 'Centro')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Aniversariante')->firstOrFail();
+
+        $this->assertSame('1990-05-20', $contact->birth_date->toDateString());
+        $this->assertSame('RG 12.345.678-9', $contact->secondary_document);
+        $this->assertSame('Centro', $contact->district);
+    }
+
+    public function test_leaving_birth_date_blank_saves_null_not_empty_string(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)
+            ->call('create')
+            ->set('name', 'Sem Nascimento')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Sem Nascimento')->firstOrFail();
+
+        $this->assertNull($contact->birth_date);
+    }
 }

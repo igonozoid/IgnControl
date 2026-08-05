@@ -32,11 +32,20 @@ class Index extends Component
     #[Validate('nullable|string|max:32')]
     public string $document = '';
 
+    #[Validate('nullable|date')]
+    public string $birth_date = '';
+
+    #[Validate('nullable|string|max:32')]
+    public string $secondary_document = '';
+
     #[Validate('nullable|email')]
     public string $email = '';
 
     #[Validate('nullable|string|max:32')]
     public string $phone = '';
+
+    #[Validate('nullable|string|max:255')]
+    public string $district = '';
 
     #[Validate('boolean')]
     public bool $is_supplier = false;
@@ -66,7 +75,7 @@ class Index extends Component
     private function resetForm(): void
     {
         $this->reset([
-            'name', 'document', 'email', 'phone',
+            'name', 'document', 'birth_date', 'secondary_document', 'email', 'phone', 'district',
             'is_supplier', 'is_customer', 'is_employee', 'is_other',
             'notes', 'editingId',
         ]);
@@ -88,8 +97,11 @@ class Index extends Component
         $this->editingId = $contact->id;
         $this->name = $contact->name;
         $this->document = (string) $contact->document;
+        $this->birth_date = $contact->birth_date?->toDateString() ?? '';
+        $this->secondary_document = (string) $contact->secondary_document;
         $this->email = (string) $contact->email;
         $this->phone = (string) $contact->phone;
+        $this->district = (string) $contact->district;
         $this->is_supplier = $contact->is_supplier;
         $this->is_customer = $contact->is_customer;
         $this->is_employee = $contact->is_employee;
@@ -103,6 +115,7 @@ class Index extends Component
         abort_unless($this->canWrite, 403);
 
         $data = $this->validate();
+        $data['birth_date'] = $data['birth_date'] ?: null;
 
         if ($this->editingId) {
             // Editar e salvar já conta como "revisado" — não precisa de

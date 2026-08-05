@@ -24,6 +24,9 @@ class Dashboard extends Component
 {
     public function render()
     {
+        // Ver comentário equivalente em App\Livewire\Tasks\Index::render().
+        Carbon::setLocale('pt_BR');
+
         $user = Auth::user();
         $canSeeFinancial = $user->hasModuleAccess('financial', 'read');
         $canSeeAgenda = $user->hasModuleAccess('agenda', 'read');

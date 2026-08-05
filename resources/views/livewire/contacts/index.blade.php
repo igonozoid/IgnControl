@@ -40,20 +40,40 @@
                 @error('name') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Documento (CPF/CNPJ)</label>
+                    <input type="text" wire:model="document" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('document') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">RG / Inscrição Estadual</label>
+                    <input type="text" wire:model="secondary_document" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('secondary_document') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+            </div>
             <div>
-                <label class="block font-medium text-gray-700 dark:text-neutral-300">Documento (CPF/CNPJ)</label>
-                <input type="text" wire:model="document" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
-                @error('document') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Data de nascimento / fundação</label>
+                <input type="date" wire:model="birth_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                @error('birth_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                <p class="text-gray-500 dark:text-neutral-400 mt-1">Se preenchido, aparece como lembrete anual na Agenda.</p>
             </div>
             <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">E-mail</label>
                 <input type="email" wire:model="email" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                 @error('email') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
-            <div>
-                <label class="block font-medium text-gray-700 dark:text-neutral-300">Telefone</label>
-                <input type="text" wire:model="phone" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
-                @error('phone') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Telefone</label>
+                    <input type="text" wire:model="phone" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('phone') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Bairro</label>
+                    <input type="text" wire:model="district" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @error('district') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+                </div>
             </div>
 
             <div>
