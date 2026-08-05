@@ -68,6 +68,39 @@
                 @error('due_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
             <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Recorrência</label>
+                <select wire:model.live="recurrence_type" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    @foreach (\App\Models\Task::RECURRENCE_TYPES as $value => $label)
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-gray-400 dark:text-neutral-500 mt-1">Ao concluir, gera sozinha a próxima ocorrência com a nova data.</p>
+                @error('recurrence_type') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+
+            @if (in_array($recurrence_type, ['weekly', 'fortnightly']))
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Dia da semana</label>
+                    <select wire:model="recurrence_weekday" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                        @foreach (['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as $i => $label)
+                            <option value="{{ $i }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @elseif (in_array($recurrence_type, ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'yearly', 'biennial']))
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Dia do mês</label>
+                    <input type="number" min="1" max="31" wire:model="recurrence_day_of_month" class="mt-1 block w-32 rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                </div>
+            @elseif ($recurrence_type === 'custom')
+                <div>
+                    <label class="block font-medium text-gray-700 dark:text-neutral-300">Regra livre</label>
+                    <input type="text" wire:model="recurrence_note" placeholder="Ex.: Toda terça ir a Santa Cruz" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+                    <p class="text-gray-400 dark:text-neutral-500 mt-1">Só um lembrete em texto — essa opção não gera a próxima ocorrência sozinha.</p>
+                </div>
+            @endif
+
+            <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">Vincular a um contato (opcional)</label>
                 <select wire:model="contact_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
                     <option value="">— nenhum —</option>
@@ -98,6 +131,13 @@
             </div>
         </form>
     </x-slide-over>
+
+    @if ($recurrenceError)
+        <div class="flex items-center gap-2 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs rounded-lg px-3 py-2 mb-3">
+            <x-icon name="lock" class="w-4 h-4" />
+            {{ $recurrenceError }}
+        </div>
+    @endif
 
     @if ($view === 'list')
         @if ($upcomingBirthdays->isNotEmpty())
@@ -139,6 +179,11 @@
                                     'text-gray-900 dark:text-neutral-100' => $task->status === 'pending',
                                     'text-gray-400 dark:text-neutral-500 line-through' => $task->status === 'done',
                                 ])>{{ $task->title }}</span>
+                                @if ($task->recurrenceLabel())
+                                    <span title="Tarefa recorrente" class="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                                        <x-icon name="calendar" class="w-3 h-3" />{{ $task->recurrenceLabel() }}
+                                    </span>
+                                @endif
                                 @if ($task->description)
                                     <p class="text-gray-500 dark:text-neutral-400">{{ $task->description }}</p>
                                 @endif

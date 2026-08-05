@@ -59,12 +59,12 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
 
 ## Contatos
 
-- **Pessoa física x jurídica explícito** (Média). O legado tem esse
-  distinção clara (rádio Física/Jurídica) que muda máscara de documento e
-  mostra/esconde campos (ex: contatos de departamento só aparece pra
-  jurídica). Hoje só inferimos pelo tamanho do documento (11 x 14
-  dígitos) pra decidir se mostra "Busca Básica" — funciona, mas não é
-  igual.
+- ~~**Pessoa física x jurídica explícito**~~ — feito. Rádio Física/
+  Jurídica no cadastro (`document_type`), com inferência automática pelo
+  tamanho do documento até o usuário escolher manualmente — depois disso
+  vira uma escolha explícita e fica salva. É o que decide o botão
+  "Busca Básica" agora. Contatos existentes foram migrados pela mesma
+  regra de inferência.
 - **Foto do contato** (Baixa). O legado permite anexar uma foto por
   contato. Hoje não existe.
 - **"Data importante"** (Baixa) — um campo de lembrete de data além do
@@ -81,10 +81,13 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
 
 ## Agenda / Tarefas
 
-- **Recorrência** (Média). O legado permite tarefa recorrente (por dia da
-  semana, dia do mês, com nota de recorrência). Hoje toda tarefa é
-  avulsa — recriar uma tarefa mensal (ex: "pagar boleto do condomínio")
-  precisa ser manual toda vez.
+- ~~**Recorrência**~~ — feito. Tarefa pode ser diária, semanal,
+  quinzenal, mensal/bimestral/trimestral/semestral/anual/bianual (com dia
+  do mês âncora) ou "personalizada" (só um lembrete em texto, não
+  calculável). Ao concluir uma tarefa recorrente, a próxima ocorrência é
+  gerada sozinha — igual ao legado, não é uma lista pré-gerada. Reabrir
+  uma tarefa cuja próxima ocorrência já foi gerada e continua aberta é
+  bloqueado, com aviso, pra não duplicar.
 - **Prioridade** (Baixa). Campo de prioridade da tarefa; hoje não existe.
 - **Vínculo com lançamento financeiro** (já temos) — o legado tinha um
   "tipo de vínculo/alvo" genérico (contato ou lançamento); nós já

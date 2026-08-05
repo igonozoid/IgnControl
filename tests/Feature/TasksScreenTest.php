@@ -100,6 +100,93 @@ class TasksScreenTest extends TestCase
         $this->assertNull($task->completed_at);
     }
 
+    public function test_completing_a_weekly_recurring_task_generates_the_next_occurrence(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $task = Task::factory()->create([
+            'company_id' => $company->id,
+            'title' => 'Regar as plantas',
+            'status' => 'pending',
+            'due_date' => '2026-03-03', // terça
+            'recurrence_type' => 'weekly',
+            'recurrence_weekday' => 2,
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->call('toggleDone', $task->id);
+
+        $this->assertSame('done', $task->refresh()->status);
+
+        $next = Task::query()->where('title', 'Regar as plantas')->where('status', 'pending')->first();
+        $this->assertNotNull($next);
+        $this->assertSame('2026-03-10', $next->due_date->toDateString());
+        $this->assertSame('weekly', $next->recurrence_type);
+    }
+
+    public function test_completing_a_monthly_recurring_task_respects_the_anchor_day(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $task = Task::factory()->create([
+            'company_id' => $company->id,
+            'title' => 'Pagar condomínio',
+            'status' => 'pending',
+            'due_date' => '2026-01-31',
+            'recurrence_type' => 'monthly',
+            'recurrence_day_of_month' => 31,
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->call('toggleDone', $task->id);
+
+        // Fevereiro não tem dia 31 — cai no último dia do mês (28, 2026
+        // não é bissexto), igual ao legado.
+        $next = Task::query()->where('title', 'Pagar condomínio')->where('status', 'pending')->first();
+        $this->assertSame('2026-02-28', $next->due_date->toDateString());
+    }
+
+    public function test_custom_recurrence_does_not_generate_a_next_occurrence(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $task = Task::factory()->create([
+            'company_id' => $company->id,
+            'title' => 'Ir ao cartório',
+            'status' => 'pending',
+            'due_date' => '2026-03-03',
+            'recurrence_type' => 'custom',
+            'recurrence_note' => 'Quando precisar',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->call('toggleDone', $task->id);
+
+        $this->assertSame(1, Task::query()->where('title', 'Ir ao cartório')->count());
+    }
+
+    public function test_reopening_a_recurring_task_is_blocked_while_the_next_occurrence_is_open(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $task = Task::factory()->create([
+            'company_id' => $company->id,
+            'title' => 'Backup semanal',
+            'status' => 'pending',
+            'due_date' => '2026-03-03',
+            'recurrence_type' => 'weekly',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->call('toggleDone', $task->id); // conclui, gera a próxima
+        $this->assertSame('done', $task->refresh()->status);
+
+        Livewire::test(Index::class)->call('toggleDone', $task->id) // tenta reabrir
+            ->assertSee('já gerou a próxima ocorrência');
+
+        $this->assertSame('done', $task->refresh()->status);
+    }
+
     public function test_full_access_user_can_delete_a_task(): void
     {
         $company = Company::factory()->create();

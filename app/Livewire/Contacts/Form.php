@@ -34,6 +34,20 @@ class Form extends Component
     #[Validate('nullable|string|max:32')]
     public string $document = '';
 
+    #[Validate('required|in:individual,company')]
+    public string $document_type = 'individual';
+
+    /**
+     * Enquanto o tipo de pessoa não foi escolhido manualmente, ele segue
+     * a mesma inferência automática que a tela sempre usou (14 dígitos =
+     * CNPJ). Assim que o usuário mexe no rádio (ou ao carregar um
+     * contato existente, que já tem o tipo salvo), a inferência para de
+     * sobrescrever — vira uma escolha explícita, igual ao legado. Público
+     * (não só uma variável local) pra sobreviver entre os round-trips do
+     * Livewire.
+     */
+    public bool $documentTypeManuallySet = false;
+
     #[Validate('nullable|date')]
     public string $birth_date = '';
 
@@ -136,6 +150,8 @@ class Form extends Component
 
             $this->name = $contact->name;
             $this->document = (string) $contact->document;
+            $this->document_type = $contact->document_type ?: 'individual';
+            $this->documentTypeManuallySet = true;
             $this->birth_date = $contact->birth_date?->toDateString() ?? '';
             $this->secondary_document = (string) $contact->secondary_document;
             $this->email = (string) $contact->email;
@@ -183,13 +199,34 @@ class Form extends Component
     }
 
     /**
-     * Documento parece CNPJ (14 dígitos)? É o que decide se o botão
-     * "Busca Básica" aparece — CPF não tem fonte pública gratuita, então
-     * não faz sentido oferecer o botão nesse caso.
+     * Tipo de pessoa é Jurídica? É o que decide se o botão "Busca
+     * Básica" aparece — CPF não tem fonte pública gratuita, então não
+     * faz sentido oferecer o botão nesse caso.
      */
     public function getIsCnpjDocumentProperty(): bool
     {
-        return strlen(preg_replace('/\D/', '', $this->document)) === 14;
+        return $this->document_type === 'company';
+    }
+
+    /**
+     * Enquanto o usuário não escolheu o tipo de pessoa manualmente pelo
+     * rádio, seguimos inferindo pelo tamanho do documento — mesma regra
+     * que a tela sempre usou. Assim que ele mexe no rádio (ou o contato
+     * já tem um tipo salvo), a inferência automática para.
+     */
+    public function updatedDocument(): void
+    {
+        if ($this->documentTypeManuallySet) {
+            return;
+        }
+
+        $digits = preg_replace('/\D/', '', $this->document);
+        $this->document_type = strlen($digits) === 14 ? 'company' : 'individual';
+    }
+
+    public function updatedDocumentType(): void
+    {
+        $this->documentTypeManuallySet = true;
     }
 
     /**

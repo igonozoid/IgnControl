@@ -5,9 +5,17 @@
         @error('name') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
     </div>
 
+    <div>
+        <label class="block font-medium text-gray-700 dark:text-neutral-300 mb-1">Tipo de pessoa</label>
+        <div class="flex gap-4 text-gray-700 dark:text-neutral-300">
+            <label class="flex items-center gap-1.5"><input type="radio" wire:model.live="document_type" value="individual" class="dark:bg-neutral-700 dark:border-neutral-600"> Física</label>
+            <label class="flex items-center gap-1.5"><input type="radio" wire:model.live="document_type" value="company" class="dark:bg-neutral-700 dark:border-neutral-600"> Jurídica</label>
+        </div>
+        @error('document_type') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+    </div>
     <div class="grid grid-cols-2 gap-4">
         <div>
-            <label class="block font-medium text-gray-700 dark:text-neutral-300">Documento (CPF/CNPJ)</label>
+            <label class="block font-medium text-gray-700 dark:text-neutral-300">Documento ({{ $document_type === 'company' ? 'CNPJ' : 'CPF' }})</label>
             <input type="text" wire:model.live="document" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
             @error('document') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             <div class="flex flex-wrap gap-2 mt-2">

@@ -18,6 +18,7 @@ class Contact extends Model
         'name',
         'display_name',
         'document',
+        'document_type',
         'birth_date',
         'secondary_document',
         'email',

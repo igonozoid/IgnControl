@@ -61,6 +61,25 @@ class Index extends Component
     #[Validate('nullable|exists:financial_entries,id')]
     public ?int $financial_entry_id = null;
 
+    // Recorrência — mesmas opções do legado (Task::RECURRENCE_TYPES).
+    // weekday/day_of_month são só âncora informativa; quem calcula a
+    // próxima data de verdade é Task::nextRecurrenceDate().
+    #[Validate('required|in:none,daily,weekly,fortnightly,monthly,bimonthly,quarterly,semiannual,yearly,biennial,custom')]
+    public string $recurrence_type = 'none';
+
+    #[Validate('nullable|integer|min:0|max:6')]
+    public ?int $recurrence_weekday = null;
+
+    #[Validate('nullable|integer|min:1|max:31')]
+    public ?int $recurrence_day_of_month = null;
+
+    #[Validate('nullable|string|max:255')]
+    public string $recurrence_note = '';
+
+    // Mensagem exibida quando tenta reabrir uma tarefa recorrente que já
+    // gerou a próxima ocorrência (evita duas ocorrências abertas juntas).
+    public ?string $recurrenceError = null;
+
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('agenda', 'read'), 403);
@@ -112,7 +131,11 @@ class Index extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['title', 'description', 'due_date', 'contact_id', 'financial_entry_id', 'editingId']);
+        $this->reset([
+            'title', 'description', 'due_date', 'contact_id', 'financial_entry_id', 'editingId',
+            'recurrence_weekday', 'recurrence_day_of_month', 'recurrence_note',
+        ]);
+        $this->recurrence_type = 'none';
     }
 
     public function create(): void
@@ -139,6 +162,10 @@ class Index extends Component
         $this->due_date = $task->due_date?->toDateString() ?? '';
         $this->contact_id = $task->contact_id;
         $this->financial_entry_id = $task->financial_entry_id;
+        $this->recurrence_type = $task->recurrence_type ?? 'none';
+        $this->recurrence_weekday = $task->recurrence_weekday;
+        $this->recurrence_day_of_month = $task->recurrence_day_of_month;
+        $this->recurrence_note = (string) $task->recurrence_note;
         $this->showForm = true;
     }
 
@@ -148,6 +175,14 @@ class Index extends Component
 
         $data = $this->validate();
         $data['due_date'] = $data['due_date'] ?: null;
+        $data['recurrence_note'] = $data['recurrence_note'] ?: null;
+
+        if (! in_array($this->recurrence_type, ['weekly', 'fortnightly'], true)) {
+            $data['recurrence_weekday'] = null;
+        }
+        if (! array_key_exists($this->recurrence_type, Task::RECURRENCE_TYPES) || in_array($this->recurrence_type, ['none', 'daily', 'weekly', 'fortnightly', 'custom'], true)) {
+            $data['recurrence_day_of_month'] = null;
+        }
 
         if ($this->editingId) {
             Task::query()->findOrFail($this->editingId)->update($data);
@@ -159,14 +194,60 @@ class Index extends Component
         $this->resetForm();
     }
 
+    /**
+     * Concluir gera a próxima ocorrência sozinho quando a tarefa é
+     * recorrente (igual ao legado — não é uma lista pré-gerada). Reabrir
+     * uma tarefa recorrente cuja próxima ocorrência já foi gerada e ainda
+     * está aberta é bloqueado, pra não ficar com duas ocorrências abertas
+     * da mesma recorrência ao mesmo tempo.
+     */
     public function toggleDone(int $id): void
     {
         abort_unless($this->canWrite, 403);
 
+        $this->recurrenceError = null;
         $task = Task::query()->findOrFail($id);
-        $task->update($task->status === 'done'
-            ? ['status' => 'pending', 'completed_at' => null]
-            : ['status' => 'done', 'completed_at' => now()]);
+
+        if ($task->status === 'done') {
+            if ($task->recurrence_type !== 'none' && $this->hasOpenNextOccurrence($task)) {
+                $this->recurrenceError = 'Essa tarefa recorrente já gerou a próxima ocorrência (ainda aberta). Reabra a nova ocorrência, ou edite a recorrência antes de reabrir esta.';
+
+                return;
+            }
+
+            $task->update(['status' => 'pending', 'completed_at' => null]);
+
+            return;
+        }
+
+        $task->update(['status' => 'done', 'completed_at' => now()]);
+
+        $nextDate = $task->nextRecurrenceDate();
+        if ($nextDate) {
+            Task::query()->create([
+                'title' => $task->title,
+                'description' => $task->description,
+                'due_date' => $nextDate->toDateString(),
+                'recurrence_type' => $task->recurrence_type,
+                'recurrence_weekday' => $task->recurrence_weekday,
+                'recurrence_day_of_month' => $task->recurrence_day_of_month,
+                'recurrence_note' => $task->recurrence_note,
+                'status' => 'pending',
+                'contact_id' => $task->contact_id,
+                'financial_entry_id' => $task->financial_entry_id,
+            ]);
+        }
+    }
+
+    private function hasOpenNextOccurrence(Task $task): bool
+    {
+        return Task::query()
+            ->where('id', '!=', $task->id)
+            ->where('status', '!=', 'done')
+            ->where('title', $task->title)
+            ->where('recurrence_type', $task->recurrence_type)
+            ->where('due_date', '>', $task->due_date)
+            ->exists();
     }
 
     public function delete(int $id): void

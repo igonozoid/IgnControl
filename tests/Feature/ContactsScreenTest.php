@@ -321,6 +321,53 @@ class ContactsScreenTest extends TestCase
             ->assertSee('Busca Básica');
     }
 
+    public function test_document_type_defaults_to_individual_and_is_saved_explicitly(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->assertSet('document_type', 'individual')
+            ->set('name', 'Pessoa Física')
+            ->call('save');
+
+        $this->assertDatabaseHas('contacts', [
+            'name' => 'Pessoa Física',
+            'document_type' => 'individual',
+        ]);
+    }
+
+    public function test_document_type_is_inferred_from_document_until_manually_chosen(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->set('document', '11.222.333/0001-81')
+            ->assertSet('document_type', 'company')
+            ->set('document_type', 'individual') // usuário corrige manualmente
+            ->set('document', '') // limpar o documento não deve mais sobrescrever
+            ->assertSet('document_type', 'individual');
+    }
+
+    public function test_editing_a_contact_keeps_its_saved_document_type(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $contact = Contact::factory()->create([
+            'company_id' => $company->id,
+            'document' => '123.456.789-00',
+            'document_type' => 'company', // valor explícito, mesmo não parecendo CNPJ
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Form::class, ['contact' => $contact])
+            ->assertSet('document_type', 'company')
+            ->assertSee('Busca Básica');
+    }
+
     public function test_buscar_cnpj_fills_fields_from_the_api_response(): void
     {
         Http::fake([
