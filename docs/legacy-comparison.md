@@ -143,6 +143,50 @@ categoria da venda são escolhidas explicitamente no formulário — o
 legado tentava adivinhar a "conta padrão", aqui seguimos o padrão do
 resto do sistema (sempre explícito).
 
+## Operação Rural (módulo novo)
+
+O legado tinha um módulo rural genérico (propriedade → talhão → ativo →
+atividade/ocorrência, com baixa de insumo no Estoque), mas foi
+**desativado da navegação em 2026-08-03** por sair do escopo real — o
+código ficou no repositório, parado, sem manutenção. Ele também nunca
+modelou safra/plantio/produtividade: "Colheita" era só mais um tipo de
+evento pontual, sem quantidade colhida associada, e não havia nenhuma
+integração com o Financeiro.
+
+Portamos o desenho básico (propriedades, talhões, ativos, atividades
+com consumo de insumo, ocorrências sanitárias/operacionais) e
+**adicionamos o conceito de safra** que o legado não tinha:
+
+- `CropSeason` (safra) tem ciclo próprio — planejada → plantada → em
+  desenvolvimento → colhida/cancelada — com data de plantio,
+  previsão e data real de colheita, produtividade esperada e real.
+- Marcar uma safra como colhida é uma ação dedicada (não um status
+  digitado à mão): se a safra tiver um produto vinculado
+  (`harvested_product_id`), gera automaticamente uma movimentação
+  `harvest_in` no Estoque com a quantidade colhida — a colheita passa a
+  existir como saldo, pronta pra Vendas escoar depois. Isso fecha um
+  gap que o legado nunca teve.
+- Atividades (`RuralActivity`) seguem o mesmo espírito do Estoque: só
+  concluídas (`status=done`) baixam insumo de fato
+  (`consumption_out`), e editar uma atividade recria os itens e a
+  movimentação do zero (`StockService::reverseByReference` +
+  repost) — diferente do legado, que apagava e reinseria sem
+  nenhuma trava de saldo insuficiente.
+- **Cancelar** uma atividade ou reabrir uma safra colhida estorna
+  (apaga) a movimentação de estoque gerada — não é um contra-lançamento
+  como em Vendas, porque aqui a movimentação nunca representou um fato
+  gerador financeiro (é consumo/produção interna, não uma venda).
+
+**Fora do escopo por enquanto**: relatório de custo por talhão/ativo
+(o legado tinha isso pronto, calculado em tempo real por `SUM` sobre
+`stock_movements` — dá pra portar depois sem mudar o schema, já que os
+movimentos já carregam `total_cost`), integração automática com
+Financeiro (o legado nunca teve isso, e não é óbvio que deveria ter —
+o custo do insumo já aparece indiretamente no Estoque), e vínculo
+formal entre uma venda e uma safra específica (quando a colheita vira
+produto em estoque, a venda dela passa pelo módulo de Vendas genérico,
+sem rastro direto pra safra de origem além do produto em si).
+
 ## Configuração da empresa (Entidade)
 
 - O legado tem, por entidade, checkboxes de "módulos habilitados"

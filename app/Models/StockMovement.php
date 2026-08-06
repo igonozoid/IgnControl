@@ -34,6 +34,7 @@ class StockMovement extends Model
         'donation_out' => 'Doação/bônus',
         'return_in' => 'Devolução',
         'consumption_out' => 'Consumo',
+        'harvest_in' => 'Colheita',
     ];
 
     public const TRANSFER_TYPES = [
@@ -41,7 +42,7 @@ class StockMovement extends Model
         'transfer_in' => 'Transferência (entrada)',
     ];
 
-    public const INBOUND_TYPES = ['purchase_in', 'manual_in', 'return_in', 'adjustment_in', 'transfer_in'];
+    public const INBOUND_TYPES = ['purchase_in', 'manual_in', 'return_in', 'adjustment_in', 'transfer_in', 'harvest_in'];
     public const OUTBOUND_TYPES = ['sale_out', 'donation_out', 'loss_out', 'adjustment_out', 'transfer_out', 'consumption_out'];
 
     protected $fillable = [
