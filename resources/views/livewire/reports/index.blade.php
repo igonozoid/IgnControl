@@ -55,5 +55,13 @@
             <p class="font-medium text-gray-900 dark:text-neutral-100">Relatórios Cadastrais</p>
             <p class="text-xs text-gray-500 dark:text-neutral-400">Listagem imprimível de contas, categorias, centros de custo e contatos.</p>
         </a>
+
+        @if (auth()->user()->hasModuleAccess('rural', 'read'))
+            <a href="{{ route('reports.rural-costs') }}" wire:navigate
+                class="block bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 hover:ring-1 hover:ring-green-300 dark:hover:ring-green-500">
+                <p class="font-medium text-gray-900 dark:text-neutral-100">Custos por Talhão/Ativo</p>
+                <p class="text-xs text-gray-500 dark:text-neutral-400">Consumo de insumo agregado por talhão e por ativo rural, num período.</p>
+            </a>
+        @endif
     </div>
 </div>

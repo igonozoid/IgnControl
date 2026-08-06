@@ -177,10 +177,14 @@ com consumo de insumo, ocorrências sanitárias/operacionais) e
   como em Vendas, porque aqui a movimentação nunca representou um fato
   gerador financeiro (é consumo/produção interna, não uma venda).
 
-**Fora do escopo por enquanto**: relatório de custo por talhão/ativo
-(o legado tinha isso pronto, calculado em tempo real por `SUM` sobre
-`stock_movements` — dá pra portar depois sem mudar o schema, já que os
-movimentos já carregam `total_cost`), integração automática com
+~~**Relatório de custo por talhão/ativo**~~ — feito. Menu Relatórios >
+Custos por Talhão/Ativo: consumo de insumo (`consumption_out`) num
+período, agregado por talhão e por ativo, mais a lista detalhada —
+mesma lógica do legado (`fetch_rural_field_cost_rows`/
+`fetch_rural_asset_cost_rows`), lida direto do ledger
+(`stock_movements.total_cost`) via a atividade que gerou o movimento.
+
+**Fora do escopo por enquanto**: integração automática com
 Financeiro (o legado nunca teve isso, e não é óbvio que deveria ter —
 o custo do insumo já aparece indiretamente no Estoque), e vínculo
 formal entre uma venda e uma safra específica (quando a colheita vira

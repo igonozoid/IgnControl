@@ -38,6 +38,7 @@ use App\Livewire\Reports\Index as ReportsIndex;
 use App\Livewire\Reports\Payables as ReportsPayables;
 use App\Livewire\Reports\Receivables as ReportsReceivables;
 use App\Livewire\Reports\Registrations as ReportsRegistrations;
+use App\Livewire\Reports\RuralCosts as ReportsRuralCosts;
 use App\Livewire\Tasks\Index as TasksIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -86,4 +87,5 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/relatorios/previsao-de-caixa', ReportsCashForecast::class)->name('reports.cash-forecast');
     Route::get('/relatorios/extrato-de-conta', ReportsAccountStatement::class)->name('reports.account-statement');
     Route::get('/relatorios/cadastrais', ReportsRegistrations::class)->name('reports.registrations');
+    Route::get('/relatorios/custos-rurais', ReportsRuralCosts::class)->name('reports.rural-costs');
 });
