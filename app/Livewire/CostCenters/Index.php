@@ -51,6 +51,7 @@ class Index extends Component
     public function mount(): void
     {
         abort_unless(Auth::user()->hasModuleAccess('financial', 'read'), 403);
+        abort_unless(Auth::user()->currentCompany?->hasModuleEnabled('cost_centers'), 403);
     }
 
     public function getCanWriteProperty(): bool

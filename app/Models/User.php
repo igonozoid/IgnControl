@@ -68,6 +68,14 @@ class User extends Authenticatable
 
     public function hasModuleAccess(string $module, string $minLevel = 'read'): bool
     {
+        // Precisa das duas coisas: a empresa ativa oferecer esse módulo
+        // (liga/desliga por empresa, ex.: uma empresa que não faz
+        // agropecuária não tem Rural) E o usuário ter permissão pra ele
+        // dentro dessa empresa. Uma coisa não substitui a outra.
+        if (! $this->currentCompany?->hasModuleEnabled($module)) {
+            return false;
+        }
+
         $order = ['none' => 0, 'read' => 1, 'full' => 2];
         $current = $order[$this->moduleLevel($module)] ?? 0;
         $required = $order[$minLevel] ?? 1;

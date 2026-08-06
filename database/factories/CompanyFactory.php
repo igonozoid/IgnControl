@@ -18,6 +18,12 @@ class CompanyFactory extends Factory
             'tax_id' => $this->faker->numerify('##.###.###/####-##'),
             'base_currency_code' => 'BRL',
             'is_active' => true,
+            // Testes existentes assumem que RH/Estoque/Vendas/Rural já
+            // estão disponíveis assim que a permissão do usuário libera
+            // — então a fábrica nasce com tudo ligado por padrão. Quem
+            // quiser testar uma empresa sem algum módulo usa
+            // ->state(['enabled_modules' => [...]]) explicitamente.
+            'enabled_modules' => \App\Models\Company::OPTIONAL_MODULES,
         ];
     }
 }

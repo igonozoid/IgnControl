@@ -52,11 +52,13 @@ new class extends Component
             <x-icon name="tag" />
             {{ __('Categorias') }}
         </a>
-        <a href="{{ route('cost-centers.index') }}" wire:navigate
-            class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('cost-centers.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
-            <x-icon name="briefcase" />
-            {{ __('Centros de Custo') }}
-        </a>
+        @if (auth()->user()->currentCompany?->hasModuleEnabled('cost_centers'))
+            <a href="{{ route('cost-centers.index') }}" wire:navigate
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('cost-centers.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                <x-icon name="briefcase" />
+                {{ __('Centros de Custo') }}
+            </a>
+        @endif
         <a href="{{ route('currencies.index') }}" wire:navigate
             class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('currencies.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
             <x-icon name="coins" />
