@@ -1,0 +1,26 @@
+# Exemplo de VirtualHost do Apache pro IgnControl no TimoSRV (XAMPP).
+# Copiar/adaptar para C:\xampp\apache\conf\extra\httpd-vhosts.conf
+# (garantir que httpd.conf tem "Include conf/extra/httpd-vhosts.conf"
+# descomentado).
+#
+# Como o Cloudflare Tunnel já cuida do HTTPS/TLS na borda, o Apache aqui
+# escuta HTTP puro na porta configurada (padrão 80) só na interface local
+# — o tunnel é quem conversa com o mundo externo, não o Apache
+# diretamente.
+
+<VirtualHost *:80>
+    ServerName ignf.local
+    # DocumentRoot aponta pra /public do Laravel, nunca pra raiz do
+    # projeto — é o que impede que .env, storage/, vendor/ etc. fiquem
+    # acessíveis via navegador.
+    DocumentRoot "C:/xampp/htdocs/IgnControl_Laravel/public"
+
+    <Directory "C:/xampp/htdocs/IgnControl_Laravel/public">
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog "logs/igncontrol-error.log"
+    CustomLog "logs/igncontrol-access.log" common
+</VirtualHost>

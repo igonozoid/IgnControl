@@ -1,0 +1,19 @@
+# Exemplo de config.yml do cloudflared pro túnel do IgnControl.
+# Copiar/adaptar para C:\Users\<usuario>\.cloudflared\config.yml (ou
+# C:\ProgramData\cloudflared\config.yml quando instalado como serviço).
+#
+# <<TUNNEL_ID>> e o caminho do arquivo de credenciais são gerados pelo
+# comando `cloudflared tunnel create igncontrol` (ver docs/production-deploy.md).
+
+tunnel: <<TUNNEL_ID>>
+credentials-file: C:\ProgramData\cloudflared\<<TUNNEL_ID>>.json
+
+ingress:
+  # Domínio/subdomínio real usado pra acessar o sistema — precisa bater
+  # com APP_URL no .env e com o registro DNS criado via
+  # `cloudflared tunnel route dns igncontrol <<seu-dominio>>`.
+  - hostname: <<seu-dominio-ou-subdominio>>
+    service: http://localhost:80
+  # Regra "catch-all" obrigatória no final — qualquer coisa que não bateu
+  # com nenhuma regra acima recebe 404 em vez de vazar erro.
+  - service: http_status:404

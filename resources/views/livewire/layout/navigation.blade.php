@@ -171,6 +171,11 @@ new class extends Component
 
         @if (auth()->user()->hasModuleAccess('admin', 'full'))
             <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Administração</p>
+            <a href="{{ route('admin.companies.index') }}" wire:navigate
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('admin.companies.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                <x-icon name="building" />
+                {{ __('Empresas') }}
+            </a>
             <a href="{{ route('admin.users.index') }}" wire:navigate
                 class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('admin.users.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
                 <x-icon name="shield" />
@@ -226,10 +231,10 @@ new class extends Component
 
         <div x-show="open" x-cloak class="mt-1 rounded-md border border-gray-100 dark:border-neutral-700 shadow-sm overflow-hidden">
             <a href="{{ route('profile') }}" wire:navigate class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 dark:text-neutral-200 dark:hover:bg-neutral-700/50 dark:bg-neutral-800">
-                {{ __('Profile') }}
+                {{ __('Perfil') }}
             </a>
             <button wire:click="logout" class="w-full text-start block px-4 py-2 text-xs text-gray-700 hover:bg-gray-50 dark:text-neutral-200 dark:hover:bg-neutral-700/50 dark:bg-neutral-800">
-                {{ __('Log Out') }}
+                {{ __('Sair') }}
             </button>
         </div>
     </div>

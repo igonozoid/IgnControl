@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Admin\Companies as AdminCompanies;
 use App\Livewire\Admin\PeriodLock as AdminPeriodLock;
 use App\Livewire\Admin\Users as AdminUsers;
 use App\Http\Controllers\AuditLogPrintController;
@@ -71,6 +72,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/rural/ativos', RuralAssetsIndex::class)->name('rural-assets.index');
     Route::get('/rural/safras', CropSeasonsIndex::class)->name('crop-seasons.index');
     Route::get('/rural/atividades', RuralActivitiesIndex::class)->name('rural-activities.index');
+    Route::get('/admin/empresas', AdminCompanies::class)->name('admin.companies.index');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
     Route::get('/admin/credenciais', AdminCredentials::class)->name('admin.credentials.index');
