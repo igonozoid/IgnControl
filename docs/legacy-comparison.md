@@ -113,12 +113,35 @@ Laravel, construímos o Estoque como módulo **standalone** primeiro:
   `reference_type`/`reference_id` polimórfico — pensado de propósito
   pra Vendas (e futuramente Rural) plugarem depois sem precisar mexer
   nessa classe, só chamar `postMovement()` com o reference deles.
-- **Fora do escopo por enquanto** (entram junto quando Vendas for
-  construído): perfil de tributação por produto, vínculo
-  produto→grupo do DRE, pedidos de venda gerando movimentação
-  automática (`sale_out`/`donation_out`/`return_in`), estorno de venda
-  cancelada. Os tipos de movimentação já existem no schema
-  (`StockMovement::SYSTEM_TYPES`), só não são gerados por nada ainda.
+- ~~**Fora do escopo por enquanto**~~ — feito junto com o módulo de
+  Vendas (abaixo): perfil de tributação por produto, categoria
+  sugerida (DRE), e os pedidos de venda já geram `sale_out`/
+  `donation_out`/`return_in` automaticamente, com estorno no
+  cancelamento.
+
+## Vendas (módulo novo)
+
+Pedidos de venda/doação/bônus/devolução, com status
+rascunho→confirmado→liquidado→cancelado. Cada confirmação/liquidação
+gera movimentação de estoque automática via `StockService` (só pra
+produtos com "controla estoque"), e — só quando o tipo é "Venda" — um
+lançamento de receita no Financeiro (pendente se confirmado, pago se
+liquidado). Editar um pedido recria os itens e a movimentação de
+estoque do zero (delete+insert), igual ao legado.
+
+**Cancelar** um pedido não apaga nada: gera movimento de estorno no
+estoque (preserva o histórico) e marca o lançamento financeiro
+vinculado como `canceled` — um desvio deliberado do legado, que criava
+uma despesa espelho pra vendas já recebidas; aqui usamos o status
+`canceled` que os relatórios já sabem ignorar, mais simples e
+consistente com o resto do sistema.
+
+**Fora do escopo por enquanto**: nota fiscal/emissão, múltiplas
+condições de pagamento por pedido (só gera um lançamento único hoje),
+orçamento/proposta antes da venda virar pedido. A conta financeira e a
+categoria da venda são escolhidas explicitamente no formulário — o
+legado tentava adivinhar a "conta padrão", aqui seguimos o padrão do
+resto do sistema (sempre explícito).
 
 ## Configuração da empresa (Entidade)
 

@@ -19,6 +19,8 @@ use App\Livewire\Hr\Index as HrIndex;
 use App\Livewire\Hr\Profile as HrProfile;
 use App\Livewire\ProductCategories\Index as ProductCategoriesIndex;
 use App\Livewire\Products\Index as ProductsIndex;
+use App\Livewire\ProductTaxProfiles\Index as ProductTaxProfilesIndex;
+use App\Livewire\Sales\Index as SalesIndex;
 use App\Livewire\StockLocations\Index as StockLocationsIndex;
 use App\Livewire\StockMovements\Index as StockMovementsIndex;
 use App\Livewire\Reports\AccountStatement as ReportsAccountStatement;
@@ -56,6 +58,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/estoque/produtos', ProductsIndex::class)->name('products.index');
     Route::get('/estoque/locais', StockLocationsIndex::class)->name('stock-locations.index');
     Route::get('/estoque/movimentacoes', StockMovementsIndex::class)->name('stock-movements.index');
+    Route::get('/vendas/pedidos', SalesIndex::class)->name('sales.index');
+    Route::get('/vendas/perfis-tributarios', ProductTaxProfilesIndex::class)->name('product-tax-profiles.index');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
     Route::get('/admin/credenciais', AdminCredentials::class)->name('admin.credentials.index');

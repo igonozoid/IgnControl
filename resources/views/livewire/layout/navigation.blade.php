@@ -84,6 +84,20 @@ new class extends Component
             </a>
         @endif
 
+        @if (auth()->user()->hasModuleAccess('sales', 'read'))
+            <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Vendas</p>
+            <a href="{{ route('sales.index') }}" wire:navigate
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('sales.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                <x-icon name="list" />
+                {{ __('Pedidos') }}
+            </a>
+            <a href="{{ route('product-tax-profiles.index') }}" wire:navigate
+                class="flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-md font-medium {{ request()->routeIs('product-tax-profiles.index') ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-neutral-300 dark:hover:bg-neutral-700/50 dark:hover:text-white' }}">
+                <x-icon name="filter" />
+                {{ __('Perfis Tributários') }}
+            </a>
+        @endif
+
         @if (auth()->user()->hasModuleAccess('inventory', 'read'))
             <p class="px-3 pt-3 pb-1 text-xs font-semibold text-gray-400 dark:text-neutral-500 uppercase">Estoque</p>
             <a href="{{ route('stock-movements.index') }}" wire:navigate

@@ -32,6 +32,8 @@ class Product extends Model
         'default_sale_price',
         'default_cost',
         'controls_stock',
+        'tax_profile_id',
+        'dre_category_id',
         'is_active',
         'notes',
     ];
@@ -46,6 +48,17 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ProductCategory::class, 'category_id');
+    }
+
+    public function taxProfile(): BelongsTo
+    {
+        return $this->belongsTo(ProductTaxProfile::class, 'tax_profile_id');
+    }
+
+    /** Categoria financeira sugerida (DRE) pra quando este produto é vendido. */
+    public function dreCategory(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'dre_category_id');
     }
 
     public function stockMovements(): HasMany
