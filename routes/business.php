@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Admin\Access as AdminAccess;
 use App\Livewire\Admin\Companies as AdminCompanies;
 use App\Livewire\Admin\PeriodLock as AdminPeriodLock;
 use App\Livewire\Admin\Users as AdminUsers;
@@ -76,6 +77,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/admin/empresas', AdminCompanies::class)->name('admin.companies.index');
     Route::get('/admin/empresas/{company}/logo', [CompanyLogoController::class, 'show'])->name('admin.companies.logo');
     Route::get('/admin/usuarios', AdminUsers::class)->name('admin.users.index');
+    Route::get('/admin/acessos', AdminAccess::class)->name('admin.access.index');
     Route::get('/admin/fechamento', AdminPeriodLock::class)->name('admin.period-lock.index');
     Route::get('/admin/credenciais', AdminCredentials::class)->name('admin.credentials.index');
     Route::get('/admin/auditoria', AdminAuditLogs::class)->name('admin.audit.index');

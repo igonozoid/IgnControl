@@ -72,10 +72,10 @@
             <div class="flex items-start gap-4">
                 <div class="shrink-0">
                     @if ($this->logoPreviewUrl)
-                        <img src="{{ $this->logoPreviewUrl }}" alt="Logo da empresa" class="w-16 h-16 rounded object-cover border border-gray-200 dark:border-neutral-600">
+                        <img src="{{ $this->logoPreviewUrl }}" alt="Logo da empresa" class="w-24 h-12 rounded object-contain bg-white border border-gray-200 dark:border-neutral-600">
                     @else
-                        <div class="w-16 h-16 rounded bg-gray-100 dark:bg-neutral-700 flex items-center justify-center text-gray-400 dark:text-neutral-500">
-                            <x-icon name="building" class="w-6 h-6" />
+                        <div class="w-24 h-12 rounded bg-gray-100 dark:bg-neutral-700 flex items-center justify-center text-gray-400 dark:text-neutral-500">
+                            <x-icon name="building" class="w-5 h-5" />
                         </div>
                     @endif
                     <div class="mt-1 flex flex-col gap-1">
@@ -87,6 +87,7 @@
                             <button type="button" wire:click="removeLogoNow" class="text-red-600 dark:text-red-400 hover:text-red-800 text-left">Remover</button>
                         @endif
                     </div>
+                    <p class="mt-1 text-[10px] text-gray-400 dark:text-neutral-500 max-w-[96px]">Ideal ~200x100px (usado no cabeçalho de relatórios). Não é obrigatório seguir à risca.</p>
                     <div wire:loading wire:target="logo" class="text-gray-400 dark:text-neutral-500 mt-1">Enviando...</div>
                     @error('logo') <span class="text-red-600 dark:text-red-400 block mt-1">{{ $message }}</span> @enderror
                 </div>

@@ -242,6 +242,16 @@ class Companies extends Component
 
         $this->showForm = false;
         $this->resetForm();
+
+        // O menu lateral (módulos ativos) é outro componente Livewire —
+        // não se re-renderiza sozinho quando a empresa ativa muda de
+        // configuração aqui. Recarrega a página inteira só quando a
+        // empresa editada é a ativa do usuário, pra refletir na hora
+        // (sem precisar de F5 manual); senão o navigate:false forçaria
+        // reload até editando uma empresa que nem é a que está em uso.
+        if ($company->id === Auth::user()->current_company_id) {
+            $this->redirect(request()->header('Referer') ?? route('admin.companies.index'), navigate: false);
+        }
     }
 
     private function syncLogo(Company $company): void
