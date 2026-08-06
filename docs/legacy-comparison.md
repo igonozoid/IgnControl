@@ -97,6 +97,29 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
   cobrimos contato e lançamento como vínculo direto, então esse ponto já
   está coberto.
 
+## Estoque (módulo novo)
+
+O legado nunca teve uma tela de Estoque de verdade separada — a lógica
+vivia dentro do módulo de Vendas (`expansion_*.py`), com produtos ligados
+a perfil de tributação e grupo do DRE. Como Vendas ainda não existe no
+Laravel, construímos o Estoque como módulo **standalone** primeiro:
+
+- Categorias de produto, Produtos (com "controla estoque" por produto,
+  igual ao legado), Locais de estoque (multi-depósito), Movimentações
+  (ledger append-only — saldo sempre somado na hora, nunca uma coluna
+  de "quantidade atual", mesmo desenho do legado).
+- `StockService` é a única porta de entrada pra mexer em saldo
+  (`available`/`postMovement`/`transfer`/`reverseByReference`), com
+  `reference_type`/`reference_id` polimórfico — pensado de propósito
+  pra Vendas (e futuramente Rural) plugarem depois sem precisar mexer
+  nessa classe, só chamar `postMovement()` com o reference deles.
+- **Fora do escopo por enquanto** (entram junto quando Vendas for
+  construído): perfil de tributação por produto, vínculo
+  produto→grupo do DRE, pedidos de venda gerando movimentação
+  automática (`sale_out`/`donation_out`/`return_in`), estorno de venda
+  cancelada. Os tipos de movimentação já existem no schema
+  (`StockMovement::SYSTEM_TYPES`), só não são gerados por nada ainda.
+
 ## Configuração da empresa (Entidade)
 
 - O legado tem, por entidade, checkboxes de "módulos habilitados"

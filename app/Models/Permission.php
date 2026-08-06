@@ -11,7 +11,7 @@ class Permission extends Model
 {
     use HasFactory, Auditable;
 
-    public const MODULES = ['financial', 'contacts', 'reports', 'agenda', 'audit', 'admin', 'credentials', 'hr'];
+    public const MODULES = ['financial', 'contacts', 'reports', 'agenda', 'audit', 'admin', 'credentials', 'hr', 'inventory'];
     public const LEVELS = ['none', 'read', 'full'];
 
     protected $fillable = [
