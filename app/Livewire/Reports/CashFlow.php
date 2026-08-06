@@ -44,12 +44,15 @@ class CashFlow extends Component
     public function render()
     {
         $openingBalance = (clone $this->paidQuery())
-            ->where('paid_date', '<', $this->from)
+            // date(paid_date) normaliza a comparação: o Eloquent grava
+            // colunas `date` com hora embutida, o que deixa comparação de
+            // string pura de data pouco confiável no SQLite.
+            ->where(DB::raw('date(paid_date)'), '<', $this->from)
             ->get()
             ->sum(fn ($entry) => $entry->type === 'income' ? $entry->amount : -$entry->amount);
 
         $rows = (clone $this->paidQuery())
-            ->whereBetween('paid_date', [$this->from, $this->to])
+            ->whereBetween(DB::raw('date(paid_date)'), [$this->from, $this->to])
             ->selectRaw('paid_date, type, sum(amount) as total')
             ->groupBy('paid_date', 'type')
             ->orderBy('paid_date')

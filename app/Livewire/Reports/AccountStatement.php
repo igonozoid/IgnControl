@@ -5,6 +5,7 @@ namespace App\Livewire\Reports;
 use App\Models\FinancialAccount;
 use App\Models\FinancialEntry;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -83,13 +84,17 @@ class AccountStatement extends Component
             ]);
         }
 
+        // date(paid_date) normaliza a comparação: o Eloquent grava
+        // colunas `date` com hora embutida ("Y-m-d 00:00:00"), o que
+        // deixa comparação/whereBetween com string pura de data pouco
+        // confiável no SQLite.
         $openingBalance = (clone $this->touchingQuery($account))
-            ->where('paid_date', '<', $this->from)
+            ->where(DB::raw('date(paid_date)'), '<', $this->from)
             ->get()
             ->sum(fn ($entry) => $this->signedAmount($entry, $account->id));
 
         $entries = (clone $this->touchingQuery($account))
-            ->whereBetween('paid_date', [$this->from, $this->to])
+            ->whereBetween(DB::raw('date(paid_date)'), [$this->from, $this->to])
             ->with(['contact', 'category', 'financialAccount', 'destinationAccount'])
             ->orderBy('paid_date')
             ->orderBy('id')

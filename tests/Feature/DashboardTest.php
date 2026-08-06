@@ -95,6 +95,29 @@ class DashboardTest extends TestCase
             ->assertSee('Ligar pro cliente');
     }
 
+    public function test_upcoming_entries_include_one_due_exactly_at_the_boundary(): void
+    {
+        // Regressão: due_date é gravado com hora embutida pelo Eloquent
+        // ("Y-m-d 00:00:00"), o que fazia um where('due_date','<=',...)
+        // com data pura excluir por engano um lançamento que vence
+        // exatamente no limite de 14 dias.
+        $company = Company::factory()->create();
+        $user = $this->userWithModules($company, ['financial' => 'read']);
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'expense',
+            'status' => 'pending',
+            'amount' => '77.00',
+            'description' => 'Conta no limite do prazo',
+            'due_date' => now()->addDays(14)->toDateString(),
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Dashboard::class)->assertSee('Conta no limite do prazo');
+    }
+
     public function test_needs_review_nudge_shows_the_pending_count(): void
     {
         $company = Company::factory()->create();

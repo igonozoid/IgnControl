@@ -41,10 +41,12 @@ class FinancialEntry extends Model
         'destination_amount' => 'decimal:4',
         'exchange_rate' => 'decimal:6',
         'fee_amount' => 'decimal:4',
-        // 'date:Y-m-d' (em vez de 'date') força o Eloquent a gravar e a
-        // serializar só a data, sem hora — evita que o SQLite (usado nos
-        // testes) grave um timestamp completo que quebraria comparações
-        // tipo whereBetween('due_date', [...]) por ordenação de string.
+        // 'date:Y-m-d' só controla a EXIBIÇÃO/serialização (toArray,
+        // JSON) — o Eloquent continua GRAVANDO com hora embutida
+        // ("Y-m-d 00:00:00"), formato ligado a $dateFormat do model, não
+        // ao sufixo do cast. Por isso todo whereBetween/comparação de
+        // data pura nessas colunas usa date(coluna) pra normalizar
+        // (ver App\Livewire\Reports\* e App\Livewire\Dashboard).
         'due_date' => 'date:Y-m-d',
         'movement_date' => 'date:Y-m-d',
         'paid_date' => 'date:Y-m-d',

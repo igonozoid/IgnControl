@@ -4,6 +4,7 @@ namespace App\Livewire\Reports;
 
 use App\Models\FinancialEntry;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -38,7 +39,11 @@ class CashForecast extends Component
         $rows = FinancialEntry::query()
             ->where('status', 'pending')
             ->whereIn('type', ['income', 'expense'])
-            ->whereBetween('due_date', [now()->toDateString(), $this->to])
+            // date(due_date) normaliza a comparação: o Eloquent grava
+            // colunas `date` com hora embutida ("Y-m-d 00:00:00"), o que
+            // deixa whereBetween com string pura de data pouco confiável
+            // no SQLite.
+            ->whereBetween(DB::raw('date(due_date)'), [now()->toDateString(), $this->to])
             ->selectRaw('due_date, type, sum(amount) as total')
             ->groupBy('due_date', 'type')
             ->orderBy('due_date')

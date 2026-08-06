@@ -278,6 +278,36 @@ class ReportsScreenTest extends TestCase
             ->assertDontSee('5.000,00');
     }
 
+    public function test_cash_flow_includes_an_entry_paid_exactly_on_the_start_date(): void
+    {
+        // Regressão: paid_date é gravado com hora embutida pelo Eloquent
+        // ("Y-m-d 00:00:00"), o que fazia o saldo inicial (pago ANTES do
+        // período) engolir por engano um pagamento feito exatamente no
+        // primeiro dia do período, em vez de contá-lo no movimento do dia.
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+
+        FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'income',
+            'amount' => '450.00',
+            'status' => 'paid',
+            'due_date' => '2026-01-10',
+            'paid_date' => '2026-01-10',
+        ]);
+
+        $this->actingAs($user);
+
+        $component = Livewire::test(CashFlow::class)
+            ->set('from', '2026-01-10')
+            ->set('to', '2026-01-20');
+
+        $this->assertEqualsWithDelta(0.0, (float) $component->viewData('openingBalance'), 0.001);
+        $this->assertEqualsWithDelta(450.0, (float) $component->viewData('closingBalance'), 0.001);
+    }
+
     public function test_payables_groups_open_expenses_by_contact_and_flags_overdue(): void
     {
         $company = Company::factory()->create();

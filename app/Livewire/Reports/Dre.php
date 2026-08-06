@@ -5,6 +5,7 @@ namespace App\Livewire\Reports;
 use App\Models\Category;
 use App\Models\FinancialEntry;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -92,7 +93,11 @@ class Dre extends Component
         $entries = FinancialEntry::query()
             ->whereIn('type', ['income', 'expense'])
             ->where('status', '!=', 'canceled')
-            ->whereBetween('movement_date', [$this->from, $this->to])
+            // date(movement_date) normaliza a comparação: o Eloquent
+            // grava colunas `date` com hora embutida, o que deixa
+            // whereBetween com string pura de data pouco confiável no
+            // SQLite.
+            ->whereBetween(DB::raw('date(movement_date)'), [$this->from, $this->to])
             ->with('category')
             ->get();
 

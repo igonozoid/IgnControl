@@ -8,6 +8,7 @@ use App\Models\Task;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
@@ -318,7 +319,11 @@ class Index extends Component
             ->with('contact')
             ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
             ->when($this->search !== '', fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
-            ->whereBetween('due_date', [$gridStart->toDateString(), $gridEnd->toDateString()])
+            // date(due_date) normaliza a comparação: o Eloquent grava
+            // colunas `date` com hora embutida ("Y-m-d 00:00:00"), o que
+            // deixa whereBetween com string pura de data pouco confiável
+            // no SQLite.
+            ->whereBetween(DB::raw('date(due_date)'), [$gridStart->toDateString(), $gridEnd->toDateString()])
             ->orderBy('due_date')
             ->get()
             ->groupBy(fn (Task $task) => $task->due_date->toDateString());

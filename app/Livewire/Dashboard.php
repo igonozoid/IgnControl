@@ -10,6 +10,7 @@ use App\Models\FinancialEntry;
 use App\Models\Task;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -67,15 +68,19 @@ class Dashboard extends Component
         $pendingIncome = FinancialEntry::query()->where('type', 'income')->where('status', 'pending');
         $pendingExpense = FinancialEntry::query()->where('type', 'expense')->where('status', 'pending');
 
+        // date(...) normaliza a comparação: o Eloquent grava colunas
+        // `date` com hora embutida ("Y-m-d 00:00:00"), o que deixa
+        // comparação/whereBetween com string pura de data pouco confiável
+        // no SQLite.
         $receivablesTotal = (clone $pendingIncome)->sum('amount');
-        $receivablesOverdue = (clone $pendingIncome)->where('due_date', '<', now()->toDateString())->sum('amount');
+        $receivablesOverdue = (clone $pendingIncome)->where(DB::raw('date(due_date)'), '<', now()->toDateString())->sum('amount');
         $payablesTotal = (clone $pendingExpense)->sum('amount');
-        $payablesOverdue = (clone $pendingExpense)->where('due_date', '<', now()->toDateString())->sum('amount');
+        $payablesOverdue = (clone $pendingExpense)->where(DB::raw('date(due_date)'), '<', now()->toDateString())->sum('amount');
 
         $monthIncome = FinancialEntry::query()->where('type', 'income')->where('status', 'paid')
-            ->whereBetween('paid_date', [now()->startOfMonth()->toDateString(), now()->toDateString()])->sum('amount');
+            ->whereBetween(DB::raw('date(paid_date)'), [now()->startOfMonth()->toDateString(), now()->toDateString()])->sum('amount');
         $monthExpense = FinancialEntry::query()->where('type', 'expense')->where('status', 'paid')
-            ->whereBetween('paid_date', [now()->startOfMonth()->toDateString(), now()->toDateString()])->sum('amount');
+            ->whereBetween(DB::raw('date(paid_date)'), [now()->startOfMonth()->toDateString(), now()->toDateString()])->sum('amount');
 
         // Últimos 6 meses (incluindo o atual), receita x despesa paga —
         // pra dar uma noção de tendência de um jeito visual, sem precisar
@@ -100,7 +105,7 @@ class Dashboard extends Component
         $upcomingEntries = FinancialEntry::query()
             ->whereIn('type', ['income', 'expense'])
             ->where('status', 'pending')
-            ->where('due_date', '<=', now()->addDays(14)->toDateString())
+            ->where(DB::raw('date(due_date)'), '<=', now()->addDays(14)->toDateString())
             ->with('contact')
             ->orderBy('due_date')
             ->limit(6)
