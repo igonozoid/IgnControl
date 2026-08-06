@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Cadastro/edição de contato — página cheia com abas (Dados básicos,
@@ -24,6 +25,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Form extends Component
 {
+    use WithFileUploads;
+
     public ?Contact $contact = null;
 
     public string $tab = 'basic'; // basic | credit | references | notes
@@ -50,6 +53,23 @@ class Form extends Component
 
     #[Validate('nullable|date')]
     public string $birth_date = '';
+
+    #[Validate('nullable|date')]
+    public string $important_date = '';
+
+    #[Validate('required_with:important_date|nullable|string|max:255')]
+    public string $important_date_label = '';
+
+    // Foto: $photo é o upload temporário do Livewire (some depois de
+    // salvar); $existingPhotoPath é o que já está gravado no contato
+    // (só leitura, pra mostrar a prévia); $removePhoto é marcado quando
+    // o usuário clica em "remover" — só apaga de fato no save().
+    #[Validate('nullable|image|max:2048')]
+    public $photo = null;
+
+    public ?string $existingPhotoPath = null;
+
+    public bool $removePhoto = false;
 
     #[Validate('nullable|string|max:32')]
     public string $secondary_document = '';
@@ -159,6 +179,9 @@ class Form extends Component
             $this->document_type = $contact->document_type ?: 'individual';
             $this->documentTypeManuallySet = true;
             $this->birth_date = $contact->birth_date?->toDateString() ?? '';
+            $this->important_date = $contact->important_date?->toDateString() ?? '';
+            $this->important_date_label = (string) $contact->important_date_label;
+            $this->existingPhotoPath = $contact->photo_path;
             $this->secondary_document = (string) $contact->secondary_document;
             $this->email = (string) $contact->email;
             $this->phone = (string) $contact->phone;
@@ -371,12 +394,38 @@ class Form extends Component
         $this->departmentContactRows = array_values($this->departmentContactRows);
     }
 
+    /**
+     * URL pra mostrar no <img> da prévia — o upload ainda não salvo (se
+     * tiver um novo selecionado agora) tem prioridade sobre a foto já
+     * gravada no contato.
+     */
+    public function getPhotoPreviewUrlProperty(): ?string
+    {
+        if ($this->photo) {
+            return $this->photo->temporaryUrl();
+        }
+
+        if ($this->existingPhotoPath && ! $this->removePhoto && $this->contact) {
+            return route('contacts.photo', $this->contact);
+        }
+
+        return null;
+    }
+
+    public function removePhotoNow(): void
+    {
+        $this->photo = null;
+        $this->removePhoto = true;
+    }
+
     public function save(): void
     {
         abort_unless($this->canWrite, 403);
 
         $data = $this->validate();
         $data['birth_date'] = $data['birth_date'] ?: null;
+        $data['important_date'] = $data['important_date'] ?: null;
+        $data['important_date_label'] = $data['important_date'] ? $data['important_date_label'] : null;
         $data['credit_limit'] = $data['credit_limit'] !== '' ? $data['credit_limit'] : null;
         $data['credit_check_date'] = $data['credit_check_date'] ?: null;
 
@@ -385,6 +434,7 @@ class Form extends Component
             $data['bankReferenceRows'],
             $data['contactBankAccountRows'],
             $data['departmentContactRows'],
+            $data['photo'],
         );
 
         $documentDigits = preg_replace('/\D/', '', $data['document'] ?? '');
@@ -431,6 +481,19 @@ class Form extends Component
                 continue;
             }
             $contact->departmentContacts()->create($row);
+        }
+
+        // Foto: um upload novo substitui a antiga; "remover" sem upload
+        // novo só apaga. Se nada mudou, a foto que já estava lá continua.
+        if ($this->photo) {
+            if ($contact->photo_path) {
+                Storage::disk('local')->delete($contact->photo_path);
+            }
+            $path = $this->photo->store("contacts/{$contact->id}/photo", 'local');
+            $contact->update(['photo_path' => $path]);
+        } elseif ($this->removePhoto && $contact->photo_path) {
+            Storage::disk('local')->delete($contact->photo_path);
+            $contact->update(['photo_path' => null]);
         }
 
         // Se a Busca Básica foi usada pra este mesmo documento, anexa o

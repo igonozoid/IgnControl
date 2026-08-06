@@ -263,25 +263,26 @@ class Index extends Component
     }
 
     /**
-     * Aniversário (ou fundação) de cada contato com Contact::birth_date
-     * preenchido que cai dentro do intervalo [from, to]. Calculado na
+     * Ocorrências anuais de uma data de contato (aniversário ou "data
+     * importante") que caem dentro do intervalo [from, to]. Calculado na
      * hora, olhando o dia/mês do cadastro no(s) ano(s) que o intervalo
      * cobre — não existe uma linha no banco pra isso.
      */
-    private function birthdayOccurrences(string $from, string $to): Collection
+    private function dateReminderOccurrences(string $dateColumn, string $from, string $to): Collection
     {
         $from = Carbon::parse($from)->startOfDay();
         $to = Carbon::parse($to)->endOfDay();
 
         return Contact::query()
-            ->whereNotNull('birth_date')
+            ->whereNotNull($dateColumn)
             ->get()
-            ->flatMap(function (Contact $contact) use ($from, $to) {
+            ->flatMap(function (Contact $contact) use ($dateColumn, $from, $to) {
                 $rows = collect();
+                $baseDate = $contact->{$dateColumn};
 
                 foreach (array_unique([$from->year, $to->year]) as $year) {
-                    $month = $contact->birth_date->month;
-                    $day = min($contact->birth_date->day, Carbon::create($year, $month, 1)->daysInMonth);
+                    $month = $baseDate->month;
+                    $day = min($baseDate->day, Carbon::create($year, $month, 1)->daysInMonth);
                     $occurrence = Carbon::create($year, $month, $day)->startOfDay();
 
                     if ($occurrence->betweenIncluded($from, $to)) {
@@ -291,6 +292,20 @@ class Index extends Component
 
                 return $rows;
             });
+    }
+
+    private function birthdayOccurrences(string $from, string $to): Collection
+    {
+        return $this->dateReminderOccurrences('birth_date', $from, $to);
+    }
+
+    /**
+     * "Data importante" — segunda data-lembrete do contato, além do
+     * aniversário (ex.: aniversário de fundação de uma empresa-cliente).
+     */
+    private function importantDateOccurrences(string $from, string $to): Collection
+    {
+        return $this->dateReminderOccurrences('important_date', $from, $to);
     }
 
     /**
@@ -311,6 +326,9 @@ class Index extends Component
         $birthdaysByDay = $this->birthdayOccurrences($gridStart->toDateString(), $gridEnd->toDateString())
             ->groupBy('date');
 
+        $importantDatesByDay = $this->importantDateOccurrences($gridStart->toDateString(), $gridEnd->toDateString())
+            ->groupBy('date');
+
         $cells = collect();
         $cursor = $gridStart->copy();
 
@@ -323,6 +341,7 @@ class Index extends Component
                 'isToday' => $cursor->isToday(),
                 'tasks' => $tasksByDay->get($key, collect()),
                 'birthdays' => $birthdaysByDay->get($key, collect()),
+                'importantDates' => $importantDatesByDay->get($key, collect()),
             ]);
 
             $cursor->addDay();
@@ -355,6 +374,10 @@ class Index extends Component
                 ->paginate(20);
 
             $data['upcomingBirthdays'] = $this->birthdayOccurrences(now()->toDateString(), now()->addDays(30)->toDateString())
+                ->sortBy('date')
+                ->values();
+
+            $data['upcomingImportantDates'] = $this->importantDateOccurrences(now()->toDateString(), now()->addDays(30)->toDateString())
                 ->sortBy('date')
                 ->values();
 

@@ -1,8 +1,30 @@
 <div class="space-y-3">
-    <div>
-        <label class="block font-medium text-gray-700 dark:text-neutral-300">Nome</label>
-        <input type="text" wire:model="name" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
-        @error('name') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+    <div class="flex items-start gap-4">
+        <div class="shrink-0">
+            @if ($this->photoPreviewUrl)
+                <img src="{{ $this->photoPreviewUrl }}" alt="Foto do contato" class="w-16 h-16 rounded-full object-cover border border-gray-200 dark:border-neutral-600">
+            @else
+                <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center text-gray-400 dark:text-neutral-500">
+                    <x-icon name="users" class="w-6 h-6" />
+                </div>
+            @endif
+            <div class="mt-1 flex flex-col gap-1">
+                <label class="text-green-600 dark:text-green-400 hover:text-green-800 cursor-pointer">
+                    Trocar foto
+                    <input type="file" wire:model="photo" accept="image/*" class="hidden">
+                </label>
+                @if ($this->photoPreviewUrl)
+                    <button type="button" wire:click="removePhotoNow" class="text-red-600 dark:text-red-400 hover:text-red-800 text-left">Remover</button>
+                @endif
+            </div>
+            <div wire:loading wire:target="photo" class="text-gray-400 dark:text-neutral-500 mt-1">Enviando...</div>
+            @error('photo') <span class="text-red-600 dark:text-red-400 block mt-1">{{ $message }}</span> @enderror
+        </div>
+        <div class="flex-1">
+            <label class="block font-medium text-gray-700 dark:text-neutral-300">Nome</label>
+            <input type="text" wire:model="name" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+            @error('name') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+        </div>
     </div>
 
     <div>
@@ -70,6 +92,18 @@
         <input type="date" wire:model="birth_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
         @error('birth_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
         <p class="text-gray-500 dark:text-neutral-400 mt-1">Se preenchido, aparece como lembrete anual na Agenda.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block font-medium text-gray-700 dark:text-neutral-300">Data importante (opcional)</label>
+            <input type="date" wire:model="important_date" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+            @error('important_date') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+        </div>
+        <div>
+            <label class="block font-medium text-gray-700 dark:text-neutral-300">O que é essa data?</label>
+            <input type="text" wire:model="important_date_label" placeholder="Ex.: Aniversário de fundação" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
+            @error('important_date_label') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+        </div>
     </div>
     <div>
         <label class="block font-medium text-gray-700 dark:text-neutral-300">E-mail</label>

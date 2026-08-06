@@ -19,7 +19,10 @@ class Contact extends Model
         'display_name',
         'document',
         'document_type',
+        'photo_path',
         'birth_date',
+        'important_date',
+        'important_date_label',
         'secondary_document',
         'email',
         'phone',
@@ -51,6 +54,7 @@ class Contact extends Model
 
     protected $casts = [
         'birth_date' => 'date:Y-m-d',
+        'important_date' => 'date:Y-m-d',
         'is_supplier' => 'boolean',
         'is_customer' => 'boolean',
         'is_employee' => 'boolean',

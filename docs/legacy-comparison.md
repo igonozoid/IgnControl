@@ -65,11 +65,13 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
   vira uma escolha explícita e fica salva. É o que decide o botão
   "Busca Básica" agora. Contatos existentes foram migrados pela mesma
   regra de inferência.
-- **Foto do contato** (Baixa). O legado permite anexar uma foto por
-  contato. Hoje não existe.
-- **"Data importante"** (Baixa) — um campo de lembrete de data além do
-  aniversário (ex: aniversário de fundação da empresa-cliente). Hoje só
-  temos `birth_date`.
+- ~~**Foto do contato**~~ — feito. Upload/troca/remoção na aba Dados
+  básicos, servida por uma rota autenticada (`contacts.photo`), não
+  fica pública.
+- ~~**"Data importante"**~~ — feito (`important_date` +
+  `important_date_label`, rótulo obrigatório só quando a data é
+  preenchida). Entra como lembrete anual na Agenda, mesmo mecanismo do
+  aniversário (cor diferente pra não confundir).
 - ~~**Contatos de departamento**~~ — feito. Na aba Referências, só para
   pessoa jurídica: sublista de pessoas de contato dentro da empresa
   (nome, cargo, ramal, e-mail), mesmo padrão de lista simples das
@@ -115,5 +117,9 @@ pra decidir o que vale trazer. Cada item tem uma prioridade sugerida —
    se vocês já fazem isso na prática; se todas as contas usadas hoje são
    em R$, pode esperar.
 3. Recorrência de tarefas — conveniência boa, não bloqueia nada.
-4. O resto (foto, contatos de departamento, tela de moedas, orçamento por
-   centro de custo) fica pra quando surgir a necessidade concreta.
+4. ~~O resto (foto, contatos de departamento, tela de moedas, orçamento
+   por centro de custo, PF/PJ explícito)~~ — feito também. O que sobra
+   deste levantamento são só os itens de arquitetura (escopo
+   Entidade/Global, módulos habilitados por empresa) e os módulos novos
+   (Vendas/Estoque/Operação Rural), que ficam pra quando entrarem
+   mesmo.

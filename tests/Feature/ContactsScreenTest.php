@@ -10,6 +10,7 @@ use App\Models\Credential;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -446,6 +447,69 @@ class ContactsScreenTest extends TestCase
         $contact = Contact::query()->where('name', 'Sem Departamento')->firstOrFail();
 
         $this->assertSame(0, $contact->departmentContacts()->count());
+    }
+
+    public function test_important_date_label_is_required_when_important_date_is_set(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->set('name', 'Cliente Data Importante')
+            ->set('important_date', '2026-03-15')
+            ->call('save')
+            ->assertHasErrors(['important_date_label']);
+    }
+
+    public function test_full_access_user_can_save_an_important_date(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        Livewire::test(Form::class)
+            ->set('name', 'Cliente Data Importante')
+            ->set('important_date', '2026-03-15')
+            ->set('important_date_label', 'Aniversário de fundação')
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Data Importante')->firstOrFail();
+
+        $this->assertSame('2026-03-15', $contact->important_date->toDateString());
+        $this->assertSame('Aniversário de fundação', $contact->important_date_label);
+    }
+
+    public function test_full_access_user_can_upload_and_remove_a_contact_photo(): void
+    {
+        Storage::fake('local');
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'full');
+        $this->actingAs($user);
+
+        // ->image() precisa da extensão GD (não instalada no ambiente de
+        // teste) só pra gerar pixels de verdade — não precisamos disso,
+        // só que a validação "image" aceite o arquivo. ->create() com
+        // mimeType explícito já é suficiente (o Laravel confia no
+        // mimeType informado em modo de teste, sem precisar ler pixel).
+        $file = UploadedFile::fake()->create('foto.jpg', 10, 'image/jpeg');
+
+        Livewire::test(Form::class)
+            ->set('name', 'Cliente Com Foto')
+            ->set('photo', $file)
+            ->call('save');
+
+        $contact = Contact::query()->where('name', 'Cliente Com Foto')->firstOrFail();
+
+        $this->assertNotNull($contact->photo_path);
+        Storage::disk('local')->assertExists($contact->photo_path);
+
+        Livewire::test(Form::class, ['contact' => $contact])
+            ->call('removePhotoNow')
+            ->call('save');
+
+        $this->assertNull($contact->refresh()->photo_path);
     }
 
     public function test_buscar_cnpj_fills_fields_from_the_api_response(): void

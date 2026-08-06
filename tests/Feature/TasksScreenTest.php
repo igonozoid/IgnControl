@@ -307,6 +307,30 @@ class TasksScreenTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_contact_important_date_appears_in_month_view_and_upcoming_widget(): void
+    {
+        $this->travelTo('2026-08-01');
+
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Contact::factory()->create([
+            'company_id' => $company->id,
+            'name' => 'Empresa Cliente',
+            'important_date' => '2020-08-20',
+            'important_date_label' => 'Aniversário de fundação',
+        ]);
+        $this->actingAs($user);
+
+        Livewire::test(Index::class)->assertSee('Empresa Cliente');
+
+        Livewire::test(Index::class)
+            ->set('view', 'month')
+            ->set('anchorDate', '2026-08-01')
+            ->assertSee('Empresa Cliente');
+
+        $this->travelBack();
+    }
+
     public function test_birthday_does_not_appear_outside_the_visible_range(): void
     {
         $company = Company::factory()->create();

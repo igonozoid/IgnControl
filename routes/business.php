@@ -4,6 +4,7 @@ use App\Livewire\Admin\PeriodLock as AdminPeriodLock;
 use App\Livewire\Admin\Users as AdminUsers;
 use App\Http\Controllers\AuditLogPrintController;
 use App\Http\Controllers\ContactDocumentController;
+use App\Http\Controllers\ContactPhotoController;
 use App\Livewire\Admin\AuditLogs\Index as AdminAuditLogs;
 use App\Livewire\Admin\Credentials\Index as AdminCredentials;
 use App\Livewire\Categories\Index as CategoriesIndex;
@@ -43,6 +44,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/contatos/novo', ContactsForm::class)->name('contacts.create');
     Route::get('/contatos/{contact}/editar', ContactsForm::class)->name('contacts.edit');
     Route::get('/contatos/documentos/{contactDocument}', [ContactDocumentController::class, 'download'])->name('contacts.documents.download');
+    Route::get('/contatos/{contact}/foto', [ContactPhotoController::class, 'show'])->name('contacts.photo');
     Route::get('/agenda', TasksIndex::class)->name('tasks.index');
     Route::get('/rh', HrIndex::class)->name('hr.index');
     Route::get('/rh/{contact}/ficha', HrProfile::class)->name('hr.profile');

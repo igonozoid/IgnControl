@@ -153,6 +153,19 @@
             </div>
         @endif
 
+        @if ($upcomingImportantDates->isNotEmpty())
+            <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4 mb-3">
+                <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase mb-2">Datas importantes nos próximos 30 dias</p>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($upcomingImportantDates as $row)
+                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">
+                            {{ $row['contact']->name }}{{ $row['contact']->important_date_label ? ' — '.$row['contact']->important_date_label : '' }} — {{ \Illuminate\Support\Carbon::parse($row['date'])->format('d/m') }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg overflow-hidden">
             <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
@@ -240,6 +253,9 @@
                             @foreach ($cell['birthdays']->take(2) as $row)
                                 <p class="truncate text-xs px-1 py-0.5 rounded bg-pink-50 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400">{{ $row['contact']->name }}</p>
                             @endforeach
+                            @foreach ($cell['importantDates']->take(2) as $row)
+                                <p class="truncate text-xs px-1 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">{{ $row['contact']->name }}</p>
+                            @endforeach
                             @foreach ($cell['tasks']->take(3) as $task)
                                 <p @class([
                                     'truncate text-xs px-1 py-0.5 rounded',
@@ -274,6 +290,9 @@
                             @foreach ($cell['birthdays'] as $row)
                                 <p class="truncate text-xs px-1 py-0.5 rounded bg-pink-50 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400">{{ $row['contact']->name }}</p>
                             @endforeach
+                            @foreach ($cell['importantDates'] as $row)
+                                <p class="truncate text-xs px-1 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">{{ $row['contact']->name }}</p>
+                            @endforeach
                             @foreach ($cell['tasks'] as $task)
                                 <button wire:click="edit({{ $task->id }})" @class([
                                     'block w-full truncate text-left text-xs px-1 py-0.5 rounded',
@@ -296,6 +315,17 @@
                     <div class="flex flex-wrap gap-2">
                         @foreach ($day['birthdays'] as $row)
                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-pink-50 dark:bg-pink-500/10 text-pink-700 dark:text-pink-400">{{ $row['contact']->name }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($day['importantDates']->isNotEmpty())
+                <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 uppercase mb-2">Datas importantes</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($day['importantDates'] as $row)
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">{{ $row['contact']->name }}{{ $row['contact']->important_date_label ? ' — '.$row['contact']->important_date_label : '' }}</span>
                         @endforeach
                     </div>
                 </div>
