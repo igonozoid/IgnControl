@@ -86,10 +86,10 @@
             <div class="grid grid-cols-2 gap-3">
                 @foreach ($modules as $module)
                     <div>
-                        <label class="block font-medium text-gray-500 dark:text-neutral-400 capitalize">{{ $module }}</label>
+                        <label class="block font-medium text-gray-500 dark:text-neutral-400">{{ \App\Models\Permission::MODULE_LABELS[$module] ?? $module }}</label>
                         <select wire:model="levels.{{ $module }}" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
                             @foreach ($levels_options as $option)
-                                <option value="{{ $option }}">{{ $option }}</option>
+                                <option value="{{ $option }}">{{ \App\Models\Permission::LEVEL_LABELS[$option] ?? $option }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -124,7 +124,7 @@
                             @foreach ($modules as $module)
                                 @php $level = $otherCompaniesLevels[$company->id][$module] ?? 'none'; @endphp
                                 <div>
-                                    <label class="block text-gray-500 dark:text-neutral-400 capitalize">{{ $module }}</label>
+                                    <label class="block text-gray-500 dark:text-neutral-400">{{ \App\Models\Permission::MODULE_LABELS[$module] ?? $module }}</label>
                                     <select
                                         wire:change="setOtherCompanyLevel({{ $otherCompaniesUser?->id }}, {{ $company->id }}, '{{ $module }}', $event.target.value)"
                                         @class([
@@ -134,7 +134,7 @@
                                             'text-green-700 dark:text-green-400 font-medium' => $level === 'full',
                                         ])>
                                         @foreach ($levels_options as $option)
-                                            <option value="{{ $option }}" @selected($option === $level)>{{ $option }}</option>
+                                            <option value="{{ $option }}" @selected($option === $level)>{{ \App\Models\Permission::LEVEL_LABELS[$option] ?? $option }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -193,7 +193,7 @@
                                         'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' => $level === 'read',
                                         'bg-green-100 text-[#15803d] dark:bg-green-500/10 dark:text-[#86efac]' => $level === 'full',
                                     ])>
-                                        {{ $module }}: {{ $level }}
+                                        {{ \App\Models\Permission::MODULE_LABELS[$module] ?? $module }}: {{ \App\Models\Permission::LEVEL_LABELS[$level] ?? $level }}
                                     </span>
                                 @endforeach
                             </div>
