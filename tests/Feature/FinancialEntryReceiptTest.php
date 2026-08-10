@@ -57,6 +57,28 @@ class FinancialEntryReceiptTest extends TestCase
             ->assertSee('1.200,00');
     }
 
+    public function test_receipt_shows_valor_por_extenso_and_observacao(): void
+    {
+        $company = Company::factory()->create(['name' => 'Empresa Teste']);
+        $user = $this->userWithLevel($company, 'read');
+        $account = FinancialAccount::factory()->create(['company_id' => $company->id]);
+        $entry = FinancialEntry::factory()->create([
+            'company_id' => $company->id,
+            'financial_account_id' => $account->id,
+            'type' => 'income',
+            'description' => 'Venda de serviço',
+            'notes' => 'Pago via PIX',
+            'amount' => '1234.56',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('financial-entries.receipt', $entry))
+            ->assertOk()
+            ->assertSee('Recebido de')
+            ->assertSee('Pago via PIX')
+            ->assertSee('Mil, duzentos e trinta e quatro reais e cinquenta e seis centavos', false);
+    }
+
     public function test_user_without_any_access_is_blocked(): void
     {
         $company = Company::factory()->create();

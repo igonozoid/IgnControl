@@ -345,6 +345,12 @@
                 @error('description') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
 
+            <div>
+                <label class="block font-medium text-gray-700 dark:text-neutral-300">Observação (opcional)</label>
+                <textarea wire:model="notes" rows="2" placeholder="Aparece no recibo, além da descrição" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm"></textarea>
+                @error('notes') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
+            </div>
+
             <div class="flex gap-3 pt-2">
                 <button type="submit" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700">
                     <x-icon name="check" />

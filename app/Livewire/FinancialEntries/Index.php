@@ -120,6 +120,11 @@ class Index extends Component
     #[Validate('nullable|string')]
     public string $description = '';
 
+    // Observação livre do recibo — separada da descrição ("referente a")
+    // porque no recibo legado são dois campos distintos.
+    #[Validate('nullable|string')]
+    public string $notes = '';
+
     #[Validate('required|date')]
     public string $due_date = '';
 
@@ -314,7 +319,7 @@ class Index extends Component
     {
         $this->reset([
             'financial_account_id', 'destination_account_id', 'contact_id',
-            'category_id', 'cost_center_id', 'amount', 'description',
+            'category_id', 'cost_center_id', 'amount', 'description', 'notes',
             'document_number', 'paid_date', 'editingId',
             'installmentsEnabled', 'destination_amount', 'fee_amount',
             'showQuickContact', 'quickContactName',
@@ -354,6 +359,7 @@ class Index extends Component
         $this->destination_amount = $entry->destination_amount !== null ? (string) $entry->destination_amount : '';
         $this->fee_amount = $entry->fee_amount !== null ? (string) $entry->fee_amount : '';
         $this->description = (string) $entry->description;
+        $this->notes = (string) $entry->notes;
         $this->document_number = (string) $entry->document_number;
         $this->due_date = $entry->due_date->toDateString();
         $this->movement_date = $entry->movement_date?->toDateString() ?? $entry->due_date->toDateString();
@@ -373,6 +379,7 @@ class Index extends Component
             'currency_code' => ['required', 'string', 'size:3', 'exists:currencies,code'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'description' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
             'document_number' => ['nullable', 'string', 'max:255'],
             'due_date' => ['required', 'date'],
             'movement_date' => ['required', 'date'],
@@ -405,6 +412,7 @@ class Index extends Component
         // DATE. Normaliza antes de qualquer outra coisa usar esse valor.
         $data['paid_date'] = $data['paid_date'] ?: null;
         $data['document_number'] = $data['document_number'] ?: null;
+        $data['notes'] = $data['notes'] ?: null;
         $data['type'] = $this->tab;
         $data['status'] = ! empty($data['paid_date']) ? 'paid' : 'pending';
 

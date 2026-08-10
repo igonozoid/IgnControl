@@ -28,6 +28,7 @@ class FinancialEntry extends Model
         'fee_amount',
         'exchange_rate_id',
         'description',
+        'notes',
         'document_number',
         'due_date',
         'movement_date',
