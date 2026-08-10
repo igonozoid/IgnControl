@@ -9,8 +9,8 @@
         @page { size: A4; margin: 10mm; }
 
         body {
-            font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            color: #1f2937;
+            font-family: Helvetica, Arial, sans-serif;
+            color: #111827;
             margin: 0;
             padding: 20px;
             font-size: 13px;
@@ -34,86 +34,89 @@
         /* Meia folha A4 por via — até duas vias empilhadas na mesma
            página, igual ao padrão do recibo do sistema legado. */
         .via {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 16px 20px;
-            margin-bottom: 14px;
+            border: 1px solid #9ca3af;
+            padding: 8mm;
+            margin-bottom: 6mm;
         }
-        .via + .via { border-top-style: dashed; }
 
         .cut-line {
             text-align: center;
             color: #9ca3af;
             font-size: 10px;
             letter-spacing: 2px;
-            margin: -6px 0 14px;
+            margin: -3mm 0 6mm;
         }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 2px solid #1f2937;
-            padding-bottom: 10px;
-            margin-bottom: 12px;
-        }
-        .header-company { display: flex; align-items: center; gap: 10px; }
-        .header-company img { height: 40px; width: 40px; object-fit: contain; }
-        .header-company .name { font-weight: 700; font-size: 15px; }
-        .header-company .meta { font-size: 11px; color: #6b7280; line-height: 1.4; }
-        .header-doc { text-align: right; font-size: 11px; color: #6b7280; }
-        .header-doc .title { font-weight: 700; font-size: 14px; color: #1f2937; }
 
         .via-tag {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 600;
-            color: #4338ca;
-            background: #e0e7ff;
-            border-radius: 999px;
-            padding: 1px 8px;
-            margin-bottom: 8px;
-        }
-
-        .field { margin: 0 0 9px; font-size: 13px; }
-        .field .label { color: #6b7280; }
-
-        .value-date-row { display: flex; gap: 24px; margin: 0 0 9px; }
-
-        .extenso {
-            font-style: italic;
-            font-size: 12px;
-            margin: 0 0 12px;
-        }
-
-        .signature {
-            margin-top: 26px;
-            text-align: center;
-        }
-        .signature .line {
-            width: 75%;
-            margin: 0 auto;
-            border-top: 1px solid #6b7280;
-            padding-top: 4px;
-            font-size: 12px;
-        }
-        .signature .doc {
-            font-size: 10px;
+            display: block;
+            text-align: right;
+            font-size: 9px;
             color: #6b7280;
+            margin-bottom: 2mm;
         }
+
+        /* Cabeçalho — mesmo padrão usado nos demais relatórios do
+           sistema: logo à esquerda, dados da empresa centralizados no
+           espaço restante, separador, título e subtítulo. */
+        .letterhead { display: flex; align-items: flex-start; gap: 4mm; }
+        .letterhead .logo { width: 26mm; flex-shrink: 0; }
+        .letterhead .logo img { max-width: 100%; max-height: 16mm; object-fit: contain; }
+        .letterhead .entity { flex: 1; text-align: center; }
+        .letterhead .entity .name { font-weight: 700; font-size: 14px; }
+        .letterhead .entity .line { font-size: 9px; color: #374151; margin-top: 1mm; }
+
+        .separator { border: none; border-top: 1px solid #111827; margin: 3mm 0; }
+
+        .title { text-align: center; font-weight: 700; font-size: 15px; letter-spacing: 1px; }
+        .subtitle { text-align: center; font-size: 10px; color: #374151; margin: 1mm 0 5mm; }
+
+        .field { margin: 0 0 6mm; font-size: 12px; }
+        .field .label { color: #374151; }
+
+        .value-date-row { display: flex; gap: 16mm; margin: 0 0 6mm; font-size: 12px; }
+
+        .importance {
+            font-style: italic;
+            font-size: 10px;
+            margin: 0 0 8mm;
+        }
+
+        .signature { margin-top: 10mm; }
+        .signature .line { border-top: 1px solid #111827; width: 100%; }
+        .signature .name { text-align: center; font-size: 11px; font-weight: 600; margin-top: 1.5mm; }
+        .signature .doc { text-align: center; font-size: 9px; color: #6b7280; margin-top: 0.5mm; }
 
         @media print {
             body { background: #fff; padding: 0; }
             .toolbar { display: none; }
             .page { max-width: none; }
-            .via { border-color: #6b7280; border-radius: 0; page-break-inside: avoid; }
+            .via { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
     @php
         $signatureName = $isExpense ? $partyName : $entityName;
+        $company = $entry->company;
+
+        $addressLine = trim(collect([
+            $company->address_line1,
+            $company->address_line2,
+            $company->district,
+            $company->city,
+            $company->state,
+            $company->postal_code ? 'CEP: '.$company->postal_code : null,
+        ])->filter()->implode(' '));
+
+        $contactsLine = trim(collect([
+            $company->phone ? 'Tel: '.$company->phone : null,
+            $company->email ? 'e-mail: '.$company->email : null,
+            $company->website ? 'site: '.$company->website : null,
+        ])->filter()->implode('  '));
+
+        $docsLine = trim(collect([$company->tax_id, $company->document_secondary])->filter()->implode('  '));
+
+        $currencyPrefix = $entry->currency_code === 'BRL' ? 'R$' : $entry->currency_code;
     @endphp
 
     <div class="toolbar">
@@ -127,47 +130,47 @@
                     <span class="via-tag">{{ $via }}ª via</span>
                 @endif
 
-                <div class="header">
-                    <div class="header-company">
-                        @if ($entry->company->logo_path)
-                            <img src="{{ route('admin.companies.logo', $entry->company) }}" alt="Logo">
+                <div class="letterhead">
+                    @if ($company->logo_path)
+                        <div class="logo"><img src="{{ route('admin.companies.logo', $company) }}" alt="Logo"></div>
+                    @endif
+                    <div class="entity">
+                        <div class="name">{{ $company->name }}</div>
+                        @if ($addressLine)
+                            <div class="line">{{ $addressLine }}</div>
                         @endif
-                        <div>
-                            <div class="name">{{ $entry->company->name }}</div>
-                            <div class="meta">
-                                @if ($entry->company->tax_id) {{ $entry->company->tax_id }} @endif
-                                @if ($entry->company->address_line1)
-                                    <br>{{ $entry->company->address_line1 }}{{ $entry->company->city ? ' — '.$entry->company->city.'/'.$entry->company->state : '' }}
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    <div class="header-doc">
-                        <div class="title">RECIBO</div>
-                        Nº {{ str_pad($entry->id, 6, '0', STR_PAD_LEFT) }}
+                        @if ($contactsLine)
+                            <div class="line">{{ $contactsLine }}</div>
+                        @endif
+                        @if ($docsLine)
+                            <div class="line">{{ $docsLine }}</div>
+                        @endif
                     </div>
                 </div>
+
+                <hr class="separator">
+
+                <div class="title">RECIBO</div>
+                <div class="subtitle">Data: {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }} | Documento: {{ $document ?: '-' }}</div>
 
                 <p class="field"><span class="label">{{ $partyLabel }}:</span> {{ $partyName ?: '—' }}</p>
                 <p class="field"><span class="label">{{ $entityLabel }}:</span> {{ $entityName ?: '—' }}</p>
 
                 <div class="value-date-row">
-                    <p class="field"><span class="label">Valor:</span> <strong>{{ $entry->currency_code }} {{ number_format($amount, 2, ',', '.') }}</strong></p>
-                    <p class="field"><span class="label">Data:</span> {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</p>
+                    <span><strong>Valor:</strong> {{ $currencyPrefix }} {{ number_format($amount, 2, ',', '.') }}</span>
+                    <span>Data: {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</span>
                 </div>
 
-                <p class="field"><span class="label">Documento:</span> {{ $document ?: '—' }}</p>
+                <p class="field"><span class="label">Documento:</span> {{ $document ?: '-' }}</p>
 
-                <p class="extenso">({{ $amountWords ?: '—' }})</p>
+                <p class="importance"><span class="label">Importância:</span> {{ $amountWords ?: '—' }}</p>
 
                 <p class="field"><span class="label">Referente a:</span> {{ $reference ?: '—' }}</p>
-
-                @if ($notes)
-                    <p class="field"><span class="label">Observação:</span> {{ $notes }}</p>
-                @endif
+                <p class="field"><span class="label">Observação:</span> {{ $notes ?: '-' }}</p>
 
                 <div class="signature">
-                    <div class="line">{{ strtoupper($signatureName ?: '—') }}</div>
+                    <div class="line"></div>
+                    <div class="name">{{ strtoupper($signatureName ?: '—') }}</div>
                     @if ($signatureDocument)
                         <div class="doc">CPF/CNPJ: {{ $signatureDocument }}</div>
                     @endif
