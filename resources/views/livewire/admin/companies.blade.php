@@ -11,6 +11,12 @@
         Empresas que você participa. Criar uma nova empresa aqui já troca automaticamente pra ela — os módulos ficam liberados em modo completo pra você, e podem ser ajustados depois em "Usuários e Permissões". Financeiro, Contatos, Relatórios, Agenda, Administração, Credenciais e Auditoria são o núcleo do sistema e ficam sempre disponíveis; RH, Estoque, Vendas, Rural e Centros de Custo são opcionais e se marcam abaixo, por empresa.
     </p>
 
+    <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
+        <div class="w-full sm:w-40">
+            <x-per-page-selector />
+        </div>
+    </div>
+
     <div class="bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-lg overflow-x-auto">
         <table class="min-w-full text-xs">
             <thead class="bg-gray-50 dark:bg-neutral-700/50 text-gray-500 dark:text-neutral-400 uppercase">
@@ -65,6 +71,10 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+
+    <div class="mt-3">
+        {{ $companies->links() }}
     </div>
 
     <x-slide-over show="showForm" close="cancel" :title="$editingId ? 'Editar empresa' : 'Nova empresa'">

@@ -12,6 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 /**
@@ -23,7 +24,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     #[Url]
     public string $filterProductId = '';
@@ -197,7 +198,7 @@ class Index extends Component
             ->when($this->filterType !== '', fn ($q) => $q->where('movement_type', $this->filterType))
             ->orderByDesc('movement_date')
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate($this->perPage);
 
         return view('livewire.stock-movements.index', [
             'movements' => $movements,

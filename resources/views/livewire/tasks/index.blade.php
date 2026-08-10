@@ -48,6 +48,9 @@
                     <option value="all">Todas</option>
                 </select>
             </div>
+            @if ($view === 'list')
+                <x-per-page-selector />
+            @endif
         </div>
     </div>
 

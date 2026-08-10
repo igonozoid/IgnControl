@@ -96,6 +96,9 @@
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Buscar (descrição/contato)</label>
                 <input type="text" wire:model.live.debounce.400ms="search" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100" placeholder="Digite pra buscar...">
             </div>
+            <div class="w-28">
+                <x-per-page-selector />
+            </div>
             @if ($tab !== 'transfer')
                 <div>
                     <button type="button" wire:click="$toggle('showMoreFilters')" class="mt-1 flex items-center gap-1 px-2 py-1.5 rounded-md text-xs text-gray-600 dark:text-neutral-300 border border-gray-300 dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700">

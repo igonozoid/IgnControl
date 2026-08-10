@@ -8,12 +8,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     #[Url]
     public string $search = '';
@@ -130,7 +131,7 @@ class Index extends Component
             ->when($this->filterStatus !== '', fn ($q) => $q->where('is_active', $this->filterStatus === 'active'))
             ->when($this->onlyNeedsReview, fn ($q) => $q->where('needs_review', true))
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.cost-centers.index', [
             'costCenters' => $costCenters,

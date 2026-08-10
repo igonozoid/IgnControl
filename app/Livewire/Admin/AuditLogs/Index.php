@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 /**
@@ -19,7 +20,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     #[Url]
     public string $dateFrom = '';
@@ -92,7 +93,7 @@ class Index extends Component
             ->when($this->model !== '', fn ($q) => $q->where('auditable_type', $this->model))
             ->with('user')
             ->latest('created_at')
-            ->paginate(30);
+            ->paginate($this->perPage);
 
         $users = User::query()
             ->whereIn('id', AuditLog::query()->where('company_id', $companyId)->whereNotNull('user_id')->distinct()->pluck('user_id'))

@@ -2,24 +2,42 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\HasPerPageSelector;
 use App\Models\Company;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
  * Tela de administração: quem tem acesso à empresa ativa e com qual
  * nível (NONE/READ/FULL) em cada módulo. Só quem tem FULL no módulo
  * 'admin' enxerga isso — é o que controla quem pode dar acesso a quem.
+ *
+ * Também cobre o acesso de um usuário em OUTRAS empresas que o admin
+ * logado administra (painel "Outras empresas" por usuário, mais busca
+ * por e-mail pra achar/gerenciar alguém que ainda nem está na empresa
+ * ativa) — isso existia antes como uma tela separada (Admin\Access),
+ * mas ficou pouco prático desconectada do fluxo normal de gerenciar
+ * usuário. Juntar tudo aqui resolve o mesmo problema (usuário com
+ * papéis diferentes empresa a empresa) sem obrigar trocar de tela.
  */
 #[Layout('layouts.app')]
 class Users extends Component
 {
+    use HasPerPageSelector, WithPagination;
+
     public bool $showInviteForm = false;
+
+    // Painel "acesso em outras empresas" de um usuário específico.
+    public ?int $otherCompaniesUserId = null;
+    public string $searchEmail = '';
+    public ?string $searchError = null;
 
     #[Validate('required|string|max:255')]
     public string $name = '';
@@ -51,6 +69,113 @@ class Users extends Component
     private function currentCompany(): Company
     {
         return Auth::user()->currentCompany;
+    }
+
+    /**
+     * Empresas onde o admin logado tem controle total ("admin" + "full")
+     * — só essas podem aparecer/ser editadas no painel "outras
+     * empresas". Por padrão exclui a empresa ativa (essa já tem a
+     * tabela principal desta tela cuidando dela).
+     */
+    private function manageableCompanies(bool $excludeCurrent = true)
+    {
+        $query = Company::query()
+            ->whereHas('permissions', function ($q) {
+                $q->where('user_id', Auth::id())->where('module', 'admin')->where('level', 'full');
+            });
+
+        if ($excludeCurrent) {
+            $query->where('id', '!=', $this->currentCompany()->id);
+        }
+
+        return $query->orderBy('name')->get();
+    }
+
+    /**
+     * Abre o painel de acesso multi-empresa de um usuário — tanto faz
+     * se ele já está na empresa ativa (veio de um botão da lista) ou
+     * foi achado pela busca por e-mail (pode ser alguém de fora dela).
+     */
+    public function openOtherCompaniesPanel(int $userId): void
+    {
+        abort_unless(Auth::user()->hasModuleAccess('admin', 'full'), 403);
+        abort_if($userId === Auth::id(), 422, 'Use a tela de Perfil pra mexer na sua própria conta.');
+
+        $this->otherCompaniesUserId = $userId;
+        $this->searchEmail = '';
+        $this->searchError = null;
+    }
+
+    public function closeOtherCompaniesPanel(): void
+    {
+        $this->otherCompaniesUserId = null;
+    }
+
+    public function searchByEmail(): void
+    {
+        $this->searchError = null;
+        $email = trim($this->searchEmail);
+
+        if ($email === '') {
+            return;
+        }
+
+        $user = User::query()->where('email', $email)->first();
+
+        if (! $user) {
+            $this->searchError = 'Nenhum usuário encontrado com esse e-mail.';
+
+            return;
+        }
+
+        if ($user->id === Auth::id()) {
+            $this->searchError = 'Use a tela de Perfil pra mexer na sua própria conta.';
+
+            return;
+        }
+
+        $this->otherCompaniesUserId = $user->id;
+        $this->searchEmail = '';
+    }
+
+    /**
+     * Muda o nível de UM módulo em UMA empresa (que não a ativa) pro
+     * usuário do painel "outras empresas" — salva na hora, célula por
+     * célula. Mantém o vínculo company_user coerente: entra quando
+     * ganha o primeiro acesso qualquer naquela empresa, sai quando
+     * perde o último.
+     */
+    public function setOtherCompanyLevel(int $userId, int $companyId, string $module, string $level): void
+    {
+        abort_unless(Auth::user()->hasModuleAccess('admin', 'full'), 403);
+        abort_if($userId === Auth::id(), 422, 'Use a tela de Perfil pra mexer na sua própria conta.');
+        abort_unless(in_array($module, Permission::MODULES, true), 422);
+        abort_unless(in_array($level, Permission::LEVELS, true), 422);
+
+        $company = $this->manageableCompanies(excludeCurrent: false)->firstWhere('id', $companyId);
+        abort_unless($company, 403);
+
+        Permission::query()->updateOrCreate(
+            ['company_id' => $companyId, 'user_id' => $userId, 'module' => $module],
+            ['level' => $level]
+        );
+
+        $hasAnyAccess = Permission::query()
+            ->where('company_id', $companyId)
+            ->where('user_id', $userId)
+            ->where('level', '!=', 'none')
+            ->exists();
+
+        if ($hasAnyAccess) {
+            $company->users()->syncWithoutDetaching([$userId]);
+        } else {
+            $company->users()->detach($userId);
+
+            // Se essa era a empresa ativa dele, limpa — senão ele fica
+            // "preso" numa empresa que não vê mais no seletor.
+            User::query()->where('id', $userId)->where('current_company_id', $companyId)
+                ->update(['current_company_id' => null]);
+        }
     }
 
     public function inviteUser(): void
@@ -201,19 +326,44 @@ class Users extends Component
     {
         $company = $this->currentCompany();
 
-        $users = $company->users()->orderBy('name')->get()->map(function (User $user) use ($company) {
-            $user->setRelation('modulePermissions', Permission::query()
-                ->where('company_id', $company->id)
-                ->where('user_id', $user->id)
-                ->pluck('level', 'module'));
+        $users = $company->users()->orderBy('name')->paginate($this->perPage);
 
-            return $user;
-        });
+        // paginate() já devolve o paginator com a Collection dentro —
+        // pra anexar a relação computada em cada User sem perder a
+        // paginação, mapeia e regrava a coleção interna em vez de usar
+        // ->map() direto (que devolveria uma Collection solta, sem
+        // firstItem()/lastItem()/links() etc.).
+        $users->setCollection(
+            $users->getCollection()->map(function (User $user) use ($company) {
+                $user->setRelation('modulePermissions', Permission::query()
+                    ->where('company_id', $company->id)
+                    ->where('user_id', $user->id)
+                    ->pluck('level', 'module'));
+
+                return $user;
+            })
+        );
+
+        $otherCompanies = $this->manageableCompanies();
+        $otherCompaniesUser = $this->otherCompaniesUserId ? User::find($this->otherCompaniesUserId) : null;
+
+        $otherCompaniesLevels = [];
+        if ($this->otherCompaniesUserId) {
+            $otherCompaniesLevels = Permission::query()
+                ->where('user_id', $this->otherCompaniesUserId)
+                ->whereIn('company_id', $otherCompanies->pluck('id'))
+                ->get()
+                ->groupBy('company_id')
+                ->map(fn ($rows) => $rows->pluck('level', 'module'));
+        }
 
         return view('livewire.admin.users', [
             'users' => $users,
             'modules' => Permission::MODULES,
             'levels_options' => Permission::LEVELS,
+            'otherCompanies' => $otherCompanies,
+            'otherCompaniesUser' => $otherCompaniesUser,
+            'otherCompaniesLevels' => $otherCompaniesLevels,
         ]);
     }
 }

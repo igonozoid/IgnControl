@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     // Filtros
     #[Url]
@@ -64,7 +65,7 @@ class Index extends Component
             ->when($this->filterRole !== '' && isset($roleColumns[$this->filterRole]), fn ($q) => $q->where($roleColumns[$this->filterRole], true))
             ->when($this->onlyNeedsReview, fn ($q) => $q->where('needs_review', true))
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.contacts.index', [
             'contacts' => $contacts,

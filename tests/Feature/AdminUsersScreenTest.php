@@ -182,4 +182,108 @@ class AdminUsersScreenTest extends TestCase
 
         Livewire::test(AdminUsers::class)->assertDontSee('Usuário Empresa B');
     }
+
+    // --- Painel "outras empresas" (substitui a antiga tela Admin\Access) ---
+
+    public function test_admin_can_grant_access_to_a_user_in_another_company_they_manage(): void
+    {
+        $companyA = Company::factory()->create();
+        $companyB = Company::factory()->create();
+        $admin = $this->adminUser($companyA);
+        $this->adminUser2($admin, $companyB);
+        $member = User::factory()->create(['current_company_id' => $companyA->id]);
+        $companyA->users()->attach($member->id, ['role' => 'member']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)
+            ->call('openOtherCompaniesPanel', $member->id)
+            ->call('setOtherCompanyLevel', $member->id, $companyB->id, 'financial', 'full');
+
+        $this->assertDatabaseHas('permissions', [
+            'company_id' => $companyB->id,
+            'user_id' => $member->id,
+            'module' => 'financial',
+            'level' => 'full',
+        ]);
+        $this->assertTrue($companyB->users()->where('users.id', $member->id)->exists());
+    }
+
+    public function test_admin_cannot_grant_access_to_a_company_they_do_not_manage(): void
+    {
+        $companyA = Company::factory()->create();
+        $companyB = Company::factory()->create(); // admin NÃO tem admin+full aqui
+        $admin = $this->adminUser($companyA);
+        $member = User::factory()->create(['current_company_id' => $companyA->id]);
+        $companyA->users()->attach($member->id, ['role' => 'member']);
+
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)
+            ->call('openOtherCompaniesPanel', $member->id)
+            ->call('setOtherCompanyLevel', $member->id, $companyB->id, 'financial', 'full')
+            ->assertForbidden();
+    }
+
+    public function test_zeroing_all_modules_in_other_company_removes_the_user_from_it(): void
+    {
+        $companyA = Company::factory()->create();
+        $companyB = Company::factory()->create();
+        $admin = $this->adminUser($companyA);
+        $this->adminUser2($admin, $companyB);
+        $member = User::factory()->create(['current_company_id' => $companyA->id]);
+        $companyA->users()->attach($member->id, ['role' => 'member']);
+
+        $this->actingAs($admin);
+
+        $component = Livewire::test(AdminUsers::class)->call('openOtherCompaniesPanel', $member->id);
+        $component->call('setOtherCompanyLevel', $member->id, $companyB->id, 'financial', 'full');
+        $this->assertTrue($companyB->users()->where('users.id', $member->id)->exists());
+
+        $component->call('setOtherCompanyLevel', $member->id, $companyB->id, 'financial', 'none');
+        $this->assertFalse($companyB->users()->where('users.id', $member->id)->exists());
+    }
+
+    public function test_search_by_email_finds_a_user_outside_the_current_company(): void
+    {
+        $companyA = Company::factory()->create();
+        $companyB = Company::factory()->create();
+        $admin = $this->adminUser($companyA);
+        $this->adminUser2($admin, $companyB);
+
+        $outsider = User::factory()->create(['email' => 'fora@example.com', 'current_company_id' => null]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)
+            ->set('searchEmail', 'fora@example.com')
+            ->call('searchByEmail')
+            ->assertSee('fora@example.com');
+    }
+
+    public function test_admin_cannot_open_their_own_other_companies_panel(): void
+    {
+        $companyA = Company::factory()->create();
+        $admin = $this->adminUser($companyA);
+        $this->actingAs($admin);
+
+        Livewire::test(AdminUsers::class)->call('openOtherCompaniesPanel', $admin->id)->assertStatus(422);
+    }
+
+    /**
+     * Dá ao admin logado controle total ("admin"+"full") também numa
+     * segunda empresa, sem trocar a empresa ativa dele — é o que faz
+     * essa empresa aparecer no painel "outras empresas".
+     */
+    private function adminUser2(User $admin, Company $otherCompany): void
+    {
+        $otherCompany->users()->attach($admin->id, ['role' => 'owner']);
+
+        Permission::query()->create([
+            'company_id' => $otherCompany->id,
+            'user_id' => $admin->id,
+            'module' => 'admin',
+            'level' => 'full',
+        ]);
+    }
 }

@@ -52,6 +52,7 @@
                     @endforeach
                 </select>
             </div>
+            <x-per-page-selector />
         </div>
         @if ($dateFrom || $dateTo || $userId || $action || $model)
             <button type="button" wire:click="clearFilters" class="mt-3 text-xs text-gray-500 dark:text-neutral-400 underline hover:text-gray-700 dark:hover:text-neutral-200">Limpar filtros</button>

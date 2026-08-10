@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Currencies;
 
+use App\Livewire\Concerns\HasPerPageSelector;
 use App\Models\Currency;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
@@ -9,16 +10,18 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
  * Cadastro de moedas — não existia tela nenhuma pra isso antes, moeda só
- * entrava via seed/migração. Poucas moedas na prática (não precisa de
- * paginação), mas o cadastro em si é igual ao do legado: código (ISO
- * 4217), nome, símbolo, casas decimais e ativa/inativa.
+ * entrava via seed/migração. O cadastro em si é igual ao do legado:
+ * código (ISO 4217), nome, símbolo, casas decimais e ativa/inativa.
  */
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use HasPerPageSelector, WithPagination;
+
     #[Url]
     public string $search = '';
 
@@ -135,7 +138,7 @@ class Index extends Component
             }))
             ->when($this->filterStatus !== '', fn ($q) => $q->where('is_active', $this->filterStatus === 'active'))
             ->orderBy('code')
-            ->get();
+            ->paginate($this->perPage);
 
         return view('livewire.currencies.index', [
             'currencies' => $currencies,

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Credentials;
 
+use App\Livewire\Concerns\HasPerPageSelector;
 use App\Models\AuditLog;
 use App\Models\Credential;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
  * Cofre de credenciais (Configurações > Credenciais no legado). Guarda
@@ -20,6 +22,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use HasPerPageSelector, WithPagination;
+
     #[Url]
     public string $search = '';
     #[Url]
@@ -191,7 +195,7 @@ class Index extends Component
             ->when($this->search !== '', fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
             ->when($this->filterCategory !== '', fn ($q) => $q->where('category', $this->filterCategory))
             ->orderBy('title')
-            ->get();
+            ->paginate($this->perPage);
 
         return view('livewire.admin.credentials.index', [
             'credentials' => $credentials,

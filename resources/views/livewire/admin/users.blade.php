@@ -108,6 +108,65 @@
         </form>
     </x-slide-over>
 
+    <x-slide-over show="otherCompaniesUserId" close="closeOtherCompaniesPanel" title="Outras empresas — {{ $otherCompaniesUser?->name }}">
+        @if ($otherCompaniesUser)
+            <p class="text-gray-500 dark:text-neutral-400 mb-3 text-xs">{{ $otherCompaniesUser->email }}</p>
+        @endif
+
+        @if ($otherCompanies->isEmpty())
+            <p class="text-xs text-gray-500 dark:text-neutral-400">Você só administra a empresa ativa — não há outra empresa sua pra dar acesso aqui.</p>
+        @else
+            <div class="space-y-4 text-xs">
+                @foreach ($otherCompanies as $company)
+                    <div class="border border-gray-200 dark:border-neutral-700 rounded-lg p-3" wire:key="other-company-{{ $company->id }}">
+                        <p class="font-medium text-gray-900 dark:text-neutral-100 mb-2">{{ $company->name }}</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach ($modules as $module)
+                                @php $level = $otherCompaniesLevels[$company->id][$module] ?? 'none'; @endphp
+                                <div>
+                                    <label class="block text-gray-500 dark:text-neutral-400 capitalize">{{ $module }}</label>
+                                    <select
+                                        wire:change="setOtherCompanyLevel({{ $otherCompaniesUser?->id }}, {{ $company->id }}, '{{ $module }}', $event.target.value)"
+                                        @class([
+                                            'mt-0.5 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100',
+                                            'text-gray-400 dark:text-neutral-500' => $level === 'none',
+                                            'text-blue-700 dark:text-blue-400' => $level === 'read',
+                                            'text-green-700 dark:text-green-400 font-medium' => $level === 'full',
+                                        ])>
+                                        @foreach ($levels_options as $option)
+                                            <option value="{{ $option }}" @selected($option === $level)>{{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <p class="text-[11px] text-gray-400 dark:text-neutral-500 mt-3">
+                Cada seleção salva na hora. Zerar todos os módulos de uma empresa remove o usuário dela automaticamente.
+            </p>
+        @endif
+    </x-slide-over>
+
+    <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="w-full sm:w-40">
+                <x-per-page-selector />
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Gerenciar acesso de alguém em outra empresa (busca por e-mail)</label>
+                <form wire:submit="searchByEmail" class="mt-1 flex gap-1.5">
+                    <input type="email" wire:model="searchEmail" placeholder="usuario@empresa.com" class="block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100">
+                    <button type="submit" class="px-3 py-1.5 rounded-md bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-neutral-200 text-xs font-medium hover:bg-gray-200 dark:hover:bg-neutral-600">Buscar</button>
+                </form>
+                @if ($searchError)
+                    <p class="text-red-600 dark:text-red-400 mt-1">{{ $searchError }}</p>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
@@ -141,7 +200,10 @@
                         </td>
                         <td class="px-4 py-2 text-right text-xs whitespace-nowrap space-x-2">
                             <button wire:click="editDetails({{ $user->id }})" title="Editar usuário" class="inline-flex text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-100"><x-icon name="pencil" /></button>
-                            <button wire:click="editPermissions({{ $user->id }})" title="Editar permissões" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="shield" /></button>
+                            <button wire:click="editPermissions({{ $user->id }})" title="Editar permissões (empresa ativa)" class="inline-flex text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"><x-icon name="shield" /></button>
+                            @if ($otherCompanies->isNotEmpty() && $user->id !== auth()->id())
+                                <button wire:click="openOtherCompaniesPanel({{ $user->id }})" title="Acesso em outras empresas" class="inline-flex text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"><x-icon name="building" /></button>
+                            @endif
                             @if ($user->id !== auth()->id())
                                 <button wire:click="removeUser({{ $user->id }})" wire:confirm="Remover este usuário da empresa?" title="Remover" class="inline-flex text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"><x-icon name="trash" /></button>
                             @endif
@@ -151,5 +213,9 @@
             </tbody>
         </table>
         </div>
+    </div>
+
+    <div class="mt-3">
+        {{ $users->links() }}
     </div>
 </div>

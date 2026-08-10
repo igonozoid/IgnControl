@@ -38,6 +38,7 @@
                     <option value="inactive">Inativos</option>
                 </select>
             </div>
+            <x-per-page-selector />
         </div>
     </div>
 

@@ -115,4 +115,30 @@ class CategoriesScreenTest extends TestCase
             ->call('create')
             ->assertDontSee('Categoria Inativa');
     }
+
+    public function test_per_page_selector_changes_how_many_rows_paginate(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        Category::factory()->count(20)->create(['company_id' => $company->id]);
+        $this->actingAs($user);
+
+        $default = Livewire::test(Index::class);
+        $this->assertSame(15, $default->viewData('categories')->perPage());
+
+        $default->set('perPage', 60);
+        $this->assertSame(60, $default->viewData('categories')->perPage());
+        $this->assertCount(20, $default->viewData('categories')->items());
+    }
+
+    public function test_invalid_per_page_value_falls_back_to_the_default(): void
+    {
+        $company = Company::factory()->create();
+        $user = $this->userWithLevel($company, 'read');
+        $this->actingAs($user);
+
+        $component = Livewire::test(Index::class)->set('perPage', 999);
+
+        $this->assertSame(15, $component->get('perPage'));
+    }
 }

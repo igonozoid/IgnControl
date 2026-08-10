@@ -8,12 +8,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     // Filtros
     #[Url]
@@ -123,7 +124,7 @@ class Index extends Component
             ->when($this->onlyNeedsReview, fn ($q) => $q->where('needs_review', true))
             ->orderBy('type')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.categories.index', [
             'categories' => $categories,

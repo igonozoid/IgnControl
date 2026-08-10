@@ -9,6 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 /**
@@ -23,7 +24,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     // Filtros
     #[Url]
@@ -126,7 +127,7 @@ class Index extends Component
             ->when($this->filterCurrency !== '', fn ($q) => $q->where('currency_code', $this->filterCurrency))
             ->when($this->filterStatus !== '', fn ($q) => $q->where('is_active', $this->filterStatus === 'active'))
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.financial-accounts.index', [
             'accounts' => $accounts,

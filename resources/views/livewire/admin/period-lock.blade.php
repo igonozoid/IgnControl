@@ -1,4 +1,4 @@
-<div class="max-w-2xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
+<div class="max-w-3xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
     <h1 class="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100 mb-4">
         <x-icon name="lock" class="w-4 h-4" />
         Fechamento de Período

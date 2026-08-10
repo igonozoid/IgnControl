@@ -15,12 +15,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     #[Url]
     public string $filterStatus = '';
@@ -249,7 +250,7 @@ class Index extends Component
             ->when($this->filterSaleType !== '', fn ($q) => $q->where('sale_type', $this->filterSaleType))
             ->orderByDesc('sale_date')
             ->orderByDesc('id')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.sales.index', [
             'orders' => $orders,

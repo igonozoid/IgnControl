@@ -40,6 +40,7 @@
                     <option value="inactive">Inativas</option>
                 </select>
             </div>
+            <x-per-page-selector />
         </div>
     </div>
 

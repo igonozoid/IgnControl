@@ -13,6 +13,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 /**
@@ -30,7 +31,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     #[Url]
     public string $view = 'list'; // list | month | week | day
@@ -376,7 +377,7 @@ class Index extends Component
                 ->when($this->status !== 'all', fn ($q) => $q->where('status', $this->status))
                 ->when($this->search !== '', fn ($q) => $q->where('title', 'like', "%{$this->search}%"))
                 ->orderByRaw('due_date is null, due_date')
-                ->paginate(20);
+                ->paginate($this->perPage);
 
             $data['upcomingBirthdays'] = $this->birthdayOccurrences(now()->toDateString(), now()->addDays(30)->toDateString())
                 ->sortBy('date')

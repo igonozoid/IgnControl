@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
+<div class="max-w-5xl mx-auto py-5 px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between mb-4">
         <h1 class="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-neutral-100">
             <x-icon name="lock" class="w-4 h-4" />
@@ -32,7 +32,7 @@
     </div>
 
     <div class="bg-white dark:bg-neutral-800 shadow-sm rounded-lg p-3 mb-3">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Buscar por título</label>
                 <input type="text" wire:model.live.debounce.400ms="search" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100" placeholder="Digite pra buscar...">
@@ -47,6 +47,7 @@
                     <option value="note">Anotação (ex.: cartão)</option>
                 </select>
             </div>
+            <x-per-page-selector />
         </div>
     </div>
 
@@ -154,5 +155,9 @@
             </tbody>
         </table>
         </div>
+    </div>
+
+    <div class="mt-3">
+        {{ $credentials->links() }}
     </div>
 </div>

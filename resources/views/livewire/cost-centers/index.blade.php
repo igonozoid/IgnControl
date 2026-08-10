@@ -23,6 +23,7 @@
                     <option value="inactive">Inativos</option>
                 </select>
             </div>
+            <x-per-page-selector />
         </div>
         <label class="mt-3 flex items-center gap-1.5 text-xs text-gray-600 dark:text-neutral-300">
             <input type="checkbox" wire:model.live="onlyNeedsReview" class="rounded dark:bg-neutral-700 dark:border-neutral-600">

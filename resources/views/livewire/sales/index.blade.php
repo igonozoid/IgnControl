@@ -29,6 +29,7 @@
                     @endforeach
                 </select>
             </div>
+            <x-per-page-selector />
         </div>
     </div>
 

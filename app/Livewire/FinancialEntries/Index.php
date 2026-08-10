@@ -15,6 +15,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Livewire\Concerns\HasPerPageSelector;
 use Livewire\WithPagination;
 
 /**
@@ -27,7 +28,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    use WithPagination;
+    use HasPerPageSelector, WithPagination;
 
     // Aba ativa — controla tanto o filtro da listagem quanto o "type"
     // usado ao criar um novo lançamento.
@@ -583,7 +584,7 @@ class Index extends Component
 
     public function render()
     {
-        $entries = $this->baseQuery()->paginate(20);
+        $entries = $this->baseQuery()->paginate($this->perPage);
 
         // Cadastro inativo continua valendo pro que já foi lançado (não
         // some da listagem nem quebra edição), mas não aparece como opção

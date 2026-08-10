@@ -2,11 +2,14 @@
 
 namespace App\Livewire\Hr;
 
+use App\Livewire\Concerns\HasPerPageSelector;
 use App\Models\Contact;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
  * RH (Administrativo > RH no legado). Lista todo Contact com
@@ -18,6 +21,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use HasPerPageSelector, WithPagination;
+
     #[Url]
     public string $staffCategory = '';
 
@@ -39,7 +44,7 @@ class Index extends Component
 
     public function render()
     {
-        $employees = Contact::query()
+        $allEmployees = Contact::query()
             ->where('is_employee', true)
             ->with(['employeeProfile', 'benefits' => fn ($q) => $q->where('active', true), 'salaryEntries' => fn ($q) => $q->latest('effective_date')->limit(1)])
             ->when($this->search !== '', fn ($q) => $q->where('name', 'like', "%{$this->search}%"))
@@ -75,12 +80,26 @@ class Index extends Component
             });
 
         $summary = [
-            'count' => $employees->count(),
-            'active' => $employees->filter(fn ($e) => ($e->contact->employeeProfile?->status ?? 'active') === 'active')->count(),
-            'salary_total' => $employees->sum('currentSalary'),
-            'benefits_total' => $employees->sum('benefitsTotal'),
-            'payroll_total' => $employees->sum('total'),
+            'count' => $allEmployees->count(),
+            'active' => $allEmployees->filter(fn ($e) => ($e->contact->employeeProfile?->status ?? 'active') === 'active')->count(),
+            'salary_total' => $allEmployees->sum('currentSalary'),
+            'benefits_total' => $allEmployees->sum('benefitsTotal'),
+            'payroll_total' => $allEmployees->sum('total'),
         ];
+
+        // A lista já vem inteira pra memória (precisa pra calcular os
+        // totais do resumo acima, que são sobre TODOS os funcionários
+        // filtrados, não só a página atual) — então a paginação em si é
+        // feita "na mão" fatiando essa coleção, em vez de usar
+        // ->paginate() direto na query.
+        $page = $this->getPage();
+        $employees = new LengthAwarePaginator(
+            $allEmployees->forPage($page, $this->perPage)->values(),
+            $allEmployees->count(),
+            $this->perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         return view('livewire.hr.index', [
             'employees' => $employees,

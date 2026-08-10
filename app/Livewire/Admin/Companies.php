@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Concerns\HasPerPageSelector;
 use App\Models\Company;
 use App\Models\Currency;
 use App\Models\Permission;
@@ -12,6 +13,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 /**
  * Tela de administração: dados cadastrais das empresas que o usuário
@@ -24,7 +26,7 @@ use Livewire\WithFileUploads;
 #[Layout('layouts.app')]
 class Companies extends Component
 {
-    use WithFileUploads;
+    use HasPerPageSelector, WithFileUploads, WithPagination;
 
     public bool $showForm = false;
     public ?int $editingId = null;
@@ -299,7 +301,7 @@ class Companies extends Component
 
     public function render()
     {
-        $companies = Auth::user()->companies()->orderBy('name')->get();
+        $companies = Auth::user()->companies()->orderBy('name')->paginate($this->perPage);
 
         return view('livewire.admin.companies', [
             'companies' => $companies,
