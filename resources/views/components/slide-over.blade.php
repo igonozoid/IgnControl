@@ -23,7 +23,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="translate-x-0"
         x-transition:leave-end="translate-x-full"
-        class="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-white dark:bg-neutral-800 shadow-xl overflow-y-auto"
+        class="fixed inset-y-0 right-0 w-full sm:w-[460px] max-w-full bg-white dark:bg-neutral-800 shadow-xl overflow-y-auto overflow-x-hidden"
     >
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-neutral-700 sticky top-0 bg-white dark:bg-neutral-800 z-10">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-neutral-100">{{ $title }}</h2>
@@ -33,7 +33,7 @@
                 </button>
             @endif
         </div>
-        <div class="p-4">
+        <div class="p-4 min-w-0">
             {{ $slot }}
         </div>
     </div>

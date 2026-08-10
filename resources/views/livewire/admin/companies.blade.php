@@ -80,7 +80,7 @@
     <x-slide-over show="showForm" close="cancel" :title="$editingId ? 'Editar empresa' : 'Nova empresa'">
         <form wire:submit="save" class="space-y-4 text-xs">
             <div class="flex items-start gap-4">
-                <div class="shrink-0">
+                <div class="shrink-0 w-24">
                     @if ($this->logoPreviewUrl)
                         <img src="{{ $this->logoPreviewUrl }}" alt="Logo da empresa" class="w-24 h-12 rounded object-contain bg-white border border-gray-200 dark:border-neutral-600">
                     @else
@@ -97,11 +97,11 @@
                             <button type="button" wire:click="removeLogoNow" class="text-red-600 dark:text-red-400 hover:text-red-800 text-left">Remover</button>
                         @endif
                     </div>
-                    <p class="mt-1 text-[10px] text-gray-400 dark:text-neutral-500 max-w-[96px]">Ideal ~200x100px (usado no cabeçalho de relatórios). Não é obrigatório seguir à risca.</p>
+                    <p class="mt-1 text-[10px] text-gray-400 dark:text-neutral-500">Ideal ~200x100px (cabeçalho de relatórios).</p>
                     <div wire:loading wire:target="logo" class="text-gray-400 dark:text-neutral-500 mt-1">Enviando...</div>
                     @error('logo') <span class="text-red-600 dark:text-red-400 block mt-1">{{ $message }}</span> @enderror
                 </div>
-                <div class="flex-1 space-y-3">
+                <div class="flex-1 min-w-0 space-y-3">
                     <div>
                         <label class="block font-medium text-gray-700 dark:text-neutral-300 mb-1">Tipo de pessoa</label>
                         <div class="flex gap-4 text-gray-700 dark:text-neutral-300">
@@ -123,7 +123,7 @@
                 @error('legal_name') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-3 [&>div]:min-w-0">
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">{{ $this->isCnpjDocument ? 'CNPJ' : 'CPF' }}</label>
                     <input type="text" wire:model="tax_id" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
@@ -143,7 +143,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-3 [&>div]:min-w-0">
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">E-mail</label>
                     <input type="email" wire:model="email" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
@@ -162,7 +162,7 @@
                 @error('website') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-3 [&>div]:min-w-0">
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">Endereço</label>
                     <input type="text" wire:model="address_line1" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
@@ -175,7 +175,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-3 [&>div]:min-w-0">
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">Bairro</label>
                     <input type="text" wire:model="district" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">
@@ -188,7 +188,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid grid-cols-3 gap-3 [&>div]:min-w-0">
                 <div>
                     <label class="block font-medium text-gray-700 dark:text-neutral-300">UF</label>
                     <input type="text" wire:model="state" maxlength="2" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm uppercase">
