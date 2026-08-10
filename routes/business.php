@@ -18,6 +18,7 @@ use App\Livewire\Currencies\Index as CurrenciesIndex;
 use App\Livewire\FinancialAccounts\Index as FinancialAccountsIndex;
 use App\Http\Controllers\FinancialEntryReceiptController;
 use App\Livewire\FinancialEntries\Index as FinancialEntriesIndex;
+use App\Livewire\FinancialEntries\Receipt as FinancialEntriesReceipt;
 use App\Livewire\Hr\Index as HrIndex;
 use App\Livewire\Hr\Profile as HrProfile;
 use App\Livewire\ProductCategories\Index as ProductCategoriesIndex;
@@ -53,7 +54,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/financeiro/centros-de-custo', CostCentersIndex::class)->name('cost-centers.index');
     Route::get('/financeiro/moedas', CurrenciesIndex::class)->name('currencies.index');
     Route::get('/financeiro/lancamentos', FinancialEntriesIndex::class)->name('financial-entries.index');
-    Route::get('/financeiro/lancamentos/{financialEntry}/recibo', [FinancialEntryReceiptController::class, 'show'])->name('financial-entries.receipt');
+    // Igual ao legado: primeiro um diálogo editável com os dados padrão
+    // do recibo (Livewire), só depois o documento final pra impressão.
+    Route::get('/financeiro/lancamentos/{financialEntry}/recibo', FinancialEntriesReceipt::class)->name('financial-entries.receipt');
+    Route::get('/financeiro/lancamentos/{financialEntry}/recibo/imprimir', [FinancialEntryReceiptController::class, 'print'])->name('financial-entries.receipt.print');
     Route::get('/contatos', ContactsIndex::class)->name('contacts.index');
     Route::get('/contatos/novo', ContactsForm::class)->name('contacts.create');
     Route::get('/contatos/{contact}/editar', ContactsForm::class)->name('contacts.edit');

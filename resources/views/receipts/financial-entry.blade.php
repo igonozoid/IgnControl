@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <title>Recibo — {{ $entry->description ?: 'Lançamento' }} #{{ $entry->id }}</title>
+    <title>Recibo — {{ $reference ?: 'Lançamento' }} #{{ $entry->id }}</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -31,8 +31,8 @@
 
         .page { max-width: 190mm; margin: 0 auto; background: #fff; }
 
-        /* Meia folha A4 por via — duas vias empilhadas na mesma página,
-           igual ao padrão do recibo do sistema legado. */
+        /* Meia folha A4 por via — até duas vias empilhadas na mesma
+           página, igual ao padrão do recibo do sistema legado. */
         .via {
             border: 1px solid #d1d5db;
             border-radius: 8px;
@@ -76,52 +76,31 @@
             margin-bottom: 8px;
         }
 
-        .lead {
-            font-size: 13px;
-            line-height: 1.7;
-            margin: 0 0 10px;
-        }
-        .lead strong { font-weight: 700; }
+        .field { margin: 0 0 9px; font-size: 13px; }
+        .field .label { color: #6b7280; }
 
-        .amount-box {
-            display: inline-block;
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 4px 12px;
-            font-weight: 700;
-            font-size: 15px;
-        }
+        .value-date-row { display: flex; gap: 24px; margin: 0 0 9px; }
 
         .extenso {
             font-style: italic;
-            margin: 10px 0;
-        }
-
-        dl.fields {
-            display: grid;
-            grid-template-columns: 110px 1fr;
-            row-gap: 4px;
-            column-gap: 10px;
-            margin: 10px 0 0;
             font-size: 12px;
+            margin: 0 0 12px;
         }
-        dl.fields dt { color: #6b7280; }
-        dl.fields dd { margin: 0; }
 
         .signature {
-            margin-top: 22px;
-            padding-top: 6px;
-            border-top: 1px solid #9ca3af;
-            width: 70%;
+            margin-top: 26px;
             text-align: center;
-            font-size: 11px;
-            color: #6b7280;
         }
-
-        .footer-note {
-            margin-top: 10px;
+        .signature .line {
+            width: 75%;
+            margin: 0 auto;
+            border-top: 1px solid #6b7280;
+            padding-top: 4px;
+            font-size: 12px;
+        }
+        .signature .doc {
             font-size: 10px;
-            color: #9ca3af;
+            color: #6b7280;
         }
 
         @media print {
@@ -134,35 +113,7 @@
 </head>
 <body>
     @php
-        $company = $entry->company;
-        $isTransfer = $entry->type === 'transfer';
-        $isIncome = $entry->type === 'income';
-
-        $counterpartLabel = match (true) {
-            $isTransfer => 'Transferência',
-            $isIncome => 'Recebido de',
-            default => 'Pagamento para',
-        };
-
-        $counterpartName = match (true) {
-            $isTransfer => trim(($entry->financialAccount?->name ?? '—').' → '.($entry->destinationAccount?->name ?? '—')),
-            default => $entry->contact?->name ?? '—',
-        };
-
-        // Data de referência do recibo: quando já baixado, a data em que
-        // efetivamente pagou/recebeu; em aberto, o vencimento — mesma
-        // regra do relatório analítico legado (paid/received usa a data
-        // de baixa, senão usa o vencimento).
-        $referenceDate = $entry->paid_date ?? $entry->due_date;
-
-        $valorExtenso = \App\Support\ValorPorExtenso::porExtenso((float) $entry->amount, $entry->currency_code);
-
-        $situacao = match (true) {
-            $entry->status === 'paid' => 'Pago em '.$entry->paid_date?->format('d/m/Y'),
-            $entry->status === 'canceled' => 'Cancelado',
-            $entry->due_date->isPast() => 'Atrasado',
-            default => 'Em aberto',
-        };
+        $signatureName = $isExpense ? $partyName : $entityName;
     @endphp
 
     <div class="toolbar">
@@ -170,79 +121,60 @@
     </div>
 
     <div class="page">
-        @for ($via = 1; $via <= 2; $via++)
+        @for ($via = 1; $via <= $copies; $via++)
             <div class="via">
-                <span class="via-tag">{{ $via }}ª via</span>
+                @if ($copies > 1)
+                    <span class="via-tag">{{ $via }}ª via</span>
+                @endif
 
                 <div class="header">
                     <div class="header-company">
-                        @if ($company->logo_path)
-                            <img src="{{ route('admin.companies.logo', $company) }}" alt="Logo">
+                        @if ($entry->company->logo_path)
+                            <img src="{{ route('admin.companies.logo', $entry->company) }}" alt="Logo">
                         @endif
                         <div>
-                            <div class="name">{{ $company->name }}</div>
+                            <div class="name">{{ $entry->company->name }}</div>
                             <div class="meta">
-                                @if ($company->tax_id) {{ $company->tax_id }} @endif
-                                @if ($company->address_line1)
-                                    <br>{{ $company->address_line1 }}{{ $company->city ? ' — '.$company->city.'/'.$company->state : '' }}
+                                @if ($entry->company->tax_id) {{ $entry->company->tax_id }} @endif
+                                @if ($entry->company->address_line1)
+                                    <br>{{ $entry->company->address_line1 }}{{ $entry->company->city ? ' — '.$entry->company->city.'/'.$entry->company->state : '' }}
                                 @endif
                             </div>
                         </div>
                     </div>
                     <div class="header-doc">
                         <div class="title">RECIBO</div>
-                        Nº {{ str_pad($entry->id, 6, '0', STR_PAD_LEFT) }}<br>
-                        Emitido em {{ now()->format('d/m/Y H:i') }}
+                        Nº {{ str_pad($entry->id, 6, '0', STR_PAD_LEFT) }}
                     </div>
                 </div>
 
-                <p class="lead">
-                    <strong>{{ $counterpartLabel }}:</strong> {{ $counterpartName }}
-                </p>
+                <p class="field"><span class="label">{{ $partyLabel }}:</span> {{ $partyName ?: '—' }}</p>
+                <p class="field"><span class="label">{{ $entityLabel }}:</span> {{ $entityName ?: '—' }}</p>
 
-                <p class="lead">
-                    Valor: <span class="amount-box">{{ $entry->currency_code }} {{ number_format((float) $entry->amount, 2, ',', '.') }}</span>
-                </p>
+                <div class="value-date-row">
+                    <p class="field"><span class="label">Valor:</span> <strong>{{ $entry->currency_code }} {{ number_format($amount, 2, ',', '.') }}</strong></p>
+                    <p class="field"><span class="label">Data:</span> {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</p>
+                </div>
 
-                <p class="extenso">
-                    ({{ ucfirst($valorExtenso) }})
-                </p>
+                <p class="field"><span class="label">Documento:</span> {{ $document ?: '—' }}</p>
 
-                <dl class="fields">
-                    <dt>Data</dt>
-                    <dd>{{ $referenceDate->format('d/m/Y') }}</dd>
+                <p class="extenso">({{ $amountWords ?: '—' }})</p>
 
-                    <dt>Documento</dt>
-                    <dd>{{ $entry->document_number ?: '—' }}</dd>
+                <p class="field"><span class="label">Referente a:</span> {{ $reference ?: '—' }}</p>
 
-                    <dt>Referente a</dt>
-                    <dd>{{ $entry->description ?: '—' }}</dd>
+                @if ($notes)
+                    <p class="field"><span class="label">Observação:</span> {{ $notes }}</p>
+                @endif
 
-                    @if ($entry->notes)
-                        <dt>Observação</dt>
-                        <dd>{{ $entry->notes }}</dd>
+                <div class="signature">
+                    <div class="line">{{ strtoupper($signatureName ?: '—') }}</div>
+                    @if ($signatureDocument)
+                        <div class="doc">CPF/CNPJ: {{ $signatureDocument }}</div>
                     @endif
-
-                    @unless ($isTransfer)
-                        <dt>Categoria</dt>
-                        <dd>{{ $entry->category?->name ?? '—' }}</dd>
-
-                        <dt>Centro de custo</dt>
-                        <dd>{{ $entry->costCenter?->name ?? '—' }}</dd>
-                    @endunless
-
-                    <dt>Situação</dt>
-                    <dd>{{ $situacao }}</dd>
-                </dl>
-
-                <div class="signature">Assinatura</div>
-
-                <div class="footer-note">
-                    Documento gerado pelo sistema — lançamento interno #{{ $entry->id }}.
                 </div>
             </div>
 
-            @if ($via === 1)
+            @if ($via < $copies)
                 <div class="cut-line">✂ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
             @endif
         @endfor

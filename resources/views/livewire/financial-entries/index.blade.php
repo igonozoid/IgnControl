@@ -347,7 +347,7 @@
 
             <div>
                 <label class="block font-medium text-gray-700 dark:text-neutral-300">Observação (opcional)</label>
-                <textarea wire:model="notes" rows="2" placeholder="Aparece no recibo, além da descrição" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm"></textarea>
+                <textarea wire:model="notes" rows="2" placeholder="Aparece no recibo, além da descrição" class="mt-1 block w-full rounded-md text-xs border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 shadow-sm">{{ $notes }}</textarea>
                 @error('notes') <span class="text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
             </div>
 
@@ -415,7 +415,9 @@
                             </span>
                         </td>
                         <td class="px-4 py-2 text-right text-xs whitespace-nowrap space-x-2">
-                            <a href="{{ route('financial-entries.receipt', $entry) }}" target="_blank" title="Imprimir recibo" class="inline-flex text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-100"><x-icon name="printer" /></a>
+                            @if ($entry->type !== 'transfer')
+                                <a href="{{ route('financial-entries.receipt', $entry) }}" target="_blank" title="Emitir recibo" class="inline-flex text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-neutral-100"><x-icon name="printer" /></a>
+                            @endif
                             @if ($this->canWrite)
                                 @if ($entry->status === 'pending')
                                     <button wire:click="markAsPaid({{ $entry->id }})" title="Baixar" class="inline-flex text-[#15803d] dark:text-[#86efac] hover:opacity-75"><x-icon name="check-circle" /></button>
